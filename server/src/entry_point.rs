@@ -37,6 +37,7 @@ use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, RwLock};
 use std::time::Duration;
 use tokio::net::TcpStream;
+use tokio::runtime::Builder;
 
 /// 0 is no redirect.
 pub static REDIRECT_TO_SERVER_ID: AtomicU8 = AtomicU8::new(0);
@@ -154,8 +155,41 @@ where
     }
 }
 
+/// Default stack size is sufficient on most platforms.
+#[cfg(not(windows))]
+const STACK_SIZE: Option<usize> = None;
+/// Need more stack to avoid overflow on Windows.
+#[cfg(windows)]
+const STACK_SIZE: Option<usize> = Some(12_000_000);
+
+#[inline(always)]
+fn with_stack_size<A: Send + 'static, R: Send + 'static>(
+    f: impl FnOnce(A) -> R + Send + 'static,
+    a: A,
+) -> R {
+    if let Some(stack_size) = STACK_SIZE {
+        std::thread::Builder::new()
+            .name(String::from("main_more_stack"))
+            .stack_size(stack_size)
+            .spawn(move || f(a))
+            .expect("could not spawn new main thread with more stack")
+            .join()
+            .unwrap()
+    } else {
+        f(a)
+    }
+}
+
 #[must_use]
 pub fn entry_point<G: ArenaService>(game_client: MiniCdn) -> ExitCode
+where
+    <G as ArenaService>::GameUpdate: std::fmt::Debug,
+{
+    with_stack_size(entry_point_inner::<G>, game_client)
+}
+
+#[must_use]
+fn entry_point_inner<G: ArenaService>(game_client: MiniCdn) -> ExitCode
 where
     <G as ArenaService>::GameUpdate: std::fmt::Debug,
 {
@@ -172,7 +206,19 @@ where
         panic!("memory allocation of {} bytes failed", layout.size());
     });
 
-    actix::System::new().block_on(async move {
+    actix::System::with_tokio_rt(|| {
+        let mut builder = Builder::new_current_thread();
+        builder.enable_io();
+        builder.enable_time();
+
+        // Avoid stack overflow.
+        if let Some(stack_size) = STACK_SIZE {
+            builder.thread_stack_size(stack_size);
+        }
+
+        builder.build().expect("could not build tokio runtime")
+    })
+    .block_on(async move {
         let options = Options::parse();
         options.init_logger();
 

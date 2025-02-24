@@ -143,8 +143,8 @@ impl Key {
     }
 
     /// `digit_with_ten` minus 1
-    pub fn index(self) -> Option<u8> {
-        self.digit_with_ten().map(|n| n.get() - 1)
+    pub fn index(self) -> Option<usize> {
+        self.digit_with_ten().map(|n| (n.get() - 1) as usize)
     }
 
     /// Digit but 0 is mapped to ten.

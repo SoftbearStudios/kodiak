@@ -51,7 +51,7 @@ impl<V, I: Index> MeshBuilder<V, I> {
         self.indices.extend_from_slice(&triangle);
     }
 
-    /// Pushes a single [`Quad`] to `indices`.
+    /// Pushes a single [`Quad`] to `indices`; assumes counter-clockwise quad.
     pub fn push_quad(&mut self, quad: Quad<I>) {
         self.indices
             .extend_from_slice(&[quad[0], quad[1], quad[2], quad[2], quad[3], quad[0]]);

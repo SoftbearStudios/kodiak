@@ -47,7 +47,7 @@ pub use service::{
     random_bot_name, random_bot_team_name, random_emoji_bot_name, ArenaContext, ArenaService, Bot,
     BotAction, BotOptions, Player, RedirectedPlayer, Score, ShardPerRealm, ShardPerTier,
 };
-pub use util::{diff_large_n, diff_small_n};
+pub use util::{base64_decode, base64_encode, diff_large_n, diff_small_n};
 
 // Re-export kodiak_common.
 pub use kodiak_common::{self, *};
