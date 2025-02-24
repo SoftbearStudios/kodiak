@@ -4,6 +4,16 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
+pub fn base64_encode(bytes: &[u8]) -> String {
+    use base64::prelude::*;
+    BASE64_STANDARD_NO_PAD.encode(bytes)
+}
+
+pub fn base64_decode(string: &str) -> Option<Vec<u8>> {
+    use base64::prelude::*;
+    BASE64_STANDARD_NO_PAD.decode(string).ok()
+}
+
 /// Yields an option's contents if [`Some`], otherwise returns from the function.
 #[macro_export]
 macro_rules! unwrap_or_return {
