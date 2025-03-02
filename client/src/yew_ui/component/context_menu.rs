@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::js_hooks::window;
 use crate::{use_set_context_menu_callback, GlobalEventListener};

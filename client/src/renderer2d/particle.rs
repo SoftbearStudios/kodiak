@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 // Clippy erroneously complains about ParticleVertex cargo 1.71.0-nightly (9e586fbd8 2023-04-25).
 #![allow(clippy::extra_unused_type_parameters)]

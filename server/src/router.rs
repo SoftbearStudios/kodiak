@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::actor::ServerActor;
 use super::entry_point::{Authenticated, CORS_ALTERNATIVE_DOMAINS, REDIRECT_TO_SERVER_ID};

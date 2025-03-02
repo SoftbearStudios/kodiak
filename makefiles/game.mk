@@ -1,7 +1,7 @@
 # game.mk
 #
 # SPDX-FileCopyrightText: 2024 Softbear, Inc.
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: LGPL-3.0-or-later
 #
 
 .PHONY: fmt run run_debug rustup submodules
@@ -31,6 +31,12 @@ run_release: engine/.git
 rustup:
 	rustup override set nightly-2024-04-20
 	rustup target add wasm32-unknown-unknown
+
+trunk:
+	cargo install --locked trunk --version 0.21.7
+	(cd client; trunk clean --tools)
+
+tools: rustup trunk
 
 submodules:
 	git submodule init

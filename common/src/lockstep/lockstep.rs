@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::{LockstepContext, LockstepPlayer, LockstepTick};
 use crate::bitcode::{self, *};
@@ -95,6 +95,11 @@ pub trait LockstepWorld: Hash + Debug + Clone + Sized {
     /// 0..1
     fn target_buffer(_supports_unreliable: bool) -> f32 {
         0.5
+    }
+
+    /// Info to produce if the server overwrites the client state.
+    fn on_complete() -> Option<Self::Info> {
+        None
     }
 
     /// t is (0, 1)

@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::{ClaimAggregation, ClaimScope, ClaimValue};
 use crate::{impl_wrapper_str, serde_str, FromStrVisitor, GameId, RealmId, SkuId};

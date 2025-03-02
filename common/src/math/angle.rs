@@ -1,8 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::bitcode::{self, *};
-use crate::TypedVisitor;
 use glam::{Mat2, Mat3, Mat4, Quat, Vec2, Vec3, Vec3Swizzles};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::f32::consts::PI;
@@ -307,13 +306,9 @@ impl<'de> Deserialize<'de> for Angle {
         D: Deserializer<'de>,
     {
         if deserializer.is_human_readable() {
-            deserializer
-                .deserialize_f32(TypedVisitor::<f32>::default())
-                .map(Self::from_radians)
+            <f32>::deserialize(deserializer).map(Self::from_radians)
         } else {
-            deserializer
-                .deserialize_i16(TypedVisitor::<i16>::default())
-                .map(Self)
+            <i16>::deserialize(deserializer).map(Self)
         }
     }
 }

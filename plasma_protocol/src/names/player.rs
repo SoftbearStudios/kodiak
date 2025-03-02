@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::{impl_wrapper_from_str, impl_wrapper_str, slice_up_to_array_string, slice_up_to_chars};
 use arrayvec::ArrayString;

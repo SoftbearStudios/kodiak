@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::{ArenaId, NonZeroUnixMillis, ServerId, ServerKind, ServerNumber, UnixTime};
 use bitcode::{Decode, Encode};
@@ -91,7 +91,7 @@ mod tests2 {
 }
 
 mod chat_id_serde {
-    use crate::{ChatId, StrVisitor};
+    use crate::ChatId;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::str::FromStr;
 
@@ -109,7 +109,7 @@ mod chat_id_serde {
         where
             D: Deserializer<'de>,
         {
-            deserializer.deserialize_str(StrVisitor).and_then(|s| {
+            <String>::deserialize(deserializer).and_then(|s| {
                 Self::from_str(&s).map_err(|_| serde::de::Error::custom("invalid chat id"))
             })
         }

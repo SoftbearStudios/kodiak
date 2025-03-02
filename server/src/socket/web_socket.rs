@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::{INBOUND_HARD_LIMIT, KEEPALIVE_INTERVAL};
 use crate::actor::{ClientAuthErr, ClientAuthRequest};

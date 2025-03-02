@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #![feature(const_option)]
 #![feature(lazy_cell)]
@@ -32,7 +32,7 @@ pub use bitcode;
 // Re-export some of the symbols from cub.
 pub use cub::{
     impl_wrapper_display, impl_wrapper_from_str, impl_wrapper_str, is_default, serde_str,
-    FromStrVisitor, NonZeroUnixMillis, StrVisitor, TypedVisitor, UnixTime,
+    FromStrVisitor, NonZeroUnixMillis, UnixTime,
 };
 
 // Re-export rustrict. (formerly core_protocol::prelude::rustrict)

@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::shard_context::ShardContextProvider;
-use super::BotOptions;
+use super::{BotOptions, ShardPerRealm};
 use crate::bitcode::*;
 use crate::service::{ArenaContext, Player, Score};
 use crate::{
     ArenaId, ArenaSettingsDto, GameConstants, NoGameArenaSettings, PlayerAlias, PlayerId, ServerId,
-    ShardPerRealm, TeamId, TeamName,
+    TeamId, TeamName,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;

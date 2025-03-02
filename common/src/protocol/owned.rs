@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 // Don't use Arcs on client.  Certain things like `MessageDto` are deduplicated
 // on the server.  Dedup is used as `Dedup<Expensive>`.  Take care to ensure `T`

@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use kodiak_common::glam::{uvec2, vec2, UVec2, Vec2};
 use serde::{Deserialize, Serialize, Serializer};
