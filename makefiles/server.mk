@@ -1,7 +1,7 @@
 # server.mk
 #
 # SPDX-FileCopyrightText: 2024 Softbear, Inc.
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: LGPL-3.0-or-later
 #
 
 .PHONY: debug deploy release run run_debug run_release

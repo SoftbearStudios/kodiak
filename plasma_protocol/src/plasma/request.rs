@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::{ChatRecipient, ClaimUpdateDto, RealmHeartbeat, ServerLogDto};
 use crate::{

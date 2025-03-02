@@ -1,8 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::bitcode::{self, *};
-use crate::TypedVisitor;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::ops::*;
@@ -204,13 +203,9 @@ impl<'de, const FREQUENCY_HZ: TicksRepr> Deserialize<'de> for GenTicks<FREQUENCY
         D: Deserializer<'de>,
     {
         if deserializer.is_human_readable() {
-            deserializer
-                .deserialize_f32(TypedVisitor::<f32>::default())
-                .map(GenTicks::from_secs)
+            <f32>::deserialize(deserializer).map(GenTicks::from_secs)
         } else {
-            deserializer
-                .deserialize_u16(TypedVisitor::<u16>::default())
-                .map(GenTicks)
+            <u16>::deserialize(deserializer).map(GenTicks)
         }
     }
 }

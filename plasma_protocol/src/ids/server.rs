@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
-use crate::{impl_wrapper_display, impl_wrapper_from_str, StrVisitor};
+use crate::{impl_wrapper_display, impl_wrapper_from_str};
 use bitcode::{Decode, Encode};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{self, Debug, Display, Formatter};
@@ -105,7 +105,7 @@ mod server_id_serde {
             D: Deserializer<'de>,
         {
             if deserializer.is_human_readable() {
-                deserializer.deserialize_str(StrVisitor).and_then(|s| {
+                <String>::deserialize(deserializer).and_then(|s| {
                     Self::from_str(&s).map_err(|_| serde::de::Error::custom("invalid server id"))
                 })
             } else {

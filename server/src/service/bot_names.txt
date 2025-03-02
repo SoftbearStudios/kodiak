@@ -37,6 +37,7 @@ Drone
 EDI
 Ennard
 Eve
+Fargo
 Freddy
 FuntimeFoxy
 Gemini

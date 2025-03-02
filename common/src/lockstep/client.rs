@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::{
     Lockstep, LockstepInputId, LockstepInputQueue, LockstepInputWindow, LockstepRequest,
@@ -71,6 +71,10 @@ where
             self.interpolated = initialization;
             // Kludge.
             //self.input_queue = Default::default();
+
+            if let Some(info) = W::on_complete() {
+                self.info.push(info);
+            }
         }
         self.server_buffered_inputs = update.buffered_inputs;
         let (ping_latency, total_latency) = self.tick(

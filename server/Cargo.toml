@@ -1,9 +1,9 @@
 [package]
 authors = ["Softbear, Inc."]
 edition = "2021"
-license = "AGPL-3.0-or-later"
+license = "LGPL-3.0-or-later"
 name = "kodiak_server"
-version = "0.1.1"
+version = "0.1.2"
 workspace = ".."
 
 [features]

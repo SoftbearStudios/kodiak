@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
-use crate::{impl_wrapper_from_str, impl_wrapper_str, ServerNumber, StrVisitor};
+use crate::{impl_wrapper_from_str, impl_wrapper_str, ServerNumber};
 use arrayvec::ArrayString;
 use bitcode::{Decode, Encode};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -77,7 +77,7 @@ impl<'de> Deserialize<'de> for InvitationId {
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_str(StrVisitor).and_then(|s| {
+        <String>::deserialize(deserializer).and_then(|s| {
             Self::from_str(&s).map_err(|_| serde::de::Error::custom("invalid invitation id"))
         })
     }

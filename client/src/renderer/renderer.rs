@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::gl::*;
 use super::shader::Shader;
@@ -32,7 +32,7 @@ impl<L: Layer> RenderChain<L> {
         f: impl FnOnce(&mut Renderer) -> L,
     ) -> Result<Self, String> {
         // Don't give backbuffer aa and depth buffer if we aren't using it.
-        let backbuffer = cfg!(not(feature = "srgb"));
+        let backbuffer = cfg!(not(feature = "renderer_srgb"));
         let mut renderer = Renderer::new(
             background_color,
             antialiasing.into(),

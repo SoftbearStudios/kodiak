@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::gl::*;
 use super::renderer::Renderer;
@@ -115,7 +115,7 @@ impl ShaderInner {
     /// Returns either Ok with a bool of if its done compiling or and Err with a compile error.
     fn query_link_status(&self, gl: &Gl, khr: Option<&Khr>) -> Result<bool, String> {
         // return Ok(false) if async compile not complete.
-        if !cfg!(feature = "blocking")
+        if !cfg!(feature = "renderer_blocking")
             && khr.is_some()
             && !gl
                 .get_program_parameter(&self.program, Khr::COMPLETION_STATUS_KHR)

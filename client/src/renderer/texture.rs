@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::gl::*;
 use super::renderer::Renderer;
@@ -613,6 +613,9 @@ impl Texture {
             placeholder,
             repeating,
             false,
+            false,
+            #[cfg(feature = "renderer_anisotropy")]
+            false,
             TextureType::D2,
         )
     }
@@ -630,6 +633,9 @@ impl Texture {
             placeholder: None,
             repeating: false,
             nearest: false,
+            disable_mipmap: false,
+            #[cfg(feature = "renderer_anisotropy")]
+            disable_anisotropy: false,
         }
     }
 
@@ -652,6 +658,8 @@ impl Texture {
             placeholder,
             repeating,
             false,
+            false,
+            false,
             TextureType::D2Array(layers.try_into().expect("max layers exceeded")),
         )
     }
@@ -671,6 +679,9 @@ impl Texture {
             placeholder,
             false,
             false,
+            false,
+            #[cfg(feature = "renderer_anisotropy")]
+            false,
             TextureType::Cube,
         )
     }
@@ -682,6 +693,8 @@ impl Texture {
         placeholder: Option<[u8; 3]>,
         repeating: bool,
         nearest: bool,
+        disable_mipmap: bool,
+        #[cfg(feature = "renderer_anisotropy")] disable_anisotropy: bool,
         typ: TextureType,
     ) -> Self {
         assert!(!matches!(format, TextureFormat::Alpha), "not supported");
@@ -959,13 +972,15 @@ impl Texture {
                 let is_pow2_or_webgl2 = cfg!(feature = "renderer_webgl2")
                     || (dimensions.x.is_power_of_two() && dimensions.y.is_power_of_two());
 
-                if is_pow2_or_webgl2 && format.can_generate_mipmaps() {
+                if is_pow2_or_webgl2 && format.can_generate_mipmaps() && !disable_mipmap {
                     gl.generate_mipmap(target);
                     gl.tex_parameteri(
                         target,
                         Gl::TEXTURE_MIN_FILTER,
                         Gl::LINEAR_MIPMAP_LINEAR as i32,
                     );
+                } else if nearest {
+                    gl.tex_parameteri(target, Gl::TEXTURE_MIN_FILTER, Gl::NEAREST as i32);
                 } else {
                     gl.tex_parameteri(target, Gl::TEXTURE_MIN_FILTER, Gl::LINEAR as i32);
                 }
@@ -976,7 +991,7 @@ impl Texture {
                 }
 
                 #[cfg(feature = "renderer_anisotropy")]
-                if let Some(anisotropy) = anisotropy {
+                if !disable_anisotropy && let Some(anisotropy) = anisotropy {
                     gl.tex_parameteri(target, Ani::TEXTURE_MAX_ANISOTROPY_EXT, anisotropy as i32);
                 }
 
@@ -1043,6 +1058,9 @@ pub struct TextureLoader<'a> {
     placeholder: Option<[u8; 3]>,
     repeating: bool,
     nearest: bool,
+    disable_mipmap: bool,
+    #[cfg(feature = "renderer_anisotropy")]
+    disable_anisotropy: bool,
 }
 
 impl<'a> TextureLoader<'a> {
@@ -1066,6 +1084,20 @@ impl<'a> TextureLoader<'a> {
         self
     }
 
+    /// Disable mipmap.
+    pub fn disable_mipmap(mut self) -> Self {
+        self.disable_mipmap = true;
+        self
+    }
+
+    /// Disable anisotropy.
+    #[inline(always)]
+    #[cfg(feature = "renderer_anisotropy")]
+    pub fn disable_anisotropy(mut self) -> Self {
+        self.disable_anisotropy = true;
+        self
+    }
+
     /// Load the texture with the options.
     pub fn load(self) -> Texture {
         Texture::load_inner(
@@ -1075,6 +1107,9 @@ impl<'a> TextureLoader<'a> {
             self.placeholder,
             self.repeating,
             self.nearest,
+            self.disable_mipmap,
+            #[cfg(feature = "renderer_anisotropy")]
+            self.disable_anisotropy,
             TextureType::D2,
         )
     }
@@ -1089,6 +1124,9 @@ impl<'a> TextureLoader<'a> {
             self.placeholder,
             self.repeating,
             self.nearest,
+            self.disable_mipmap,
+            #[cfg(feature = "renderer_anisotropy")]
+            self.disable_anisotropy,
             TextureType::D2Array(layers.try_into().expect("max layers exceeded")),
         )
     }

@@ -3,7 +3,7 @@
 # release_kodiak.sh
 #
 # SPDX-FileCopyrightText: 2024 Softbear, Inc.
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: LGPL-3.0-or-later
 #
 # This script pushes the contents of the working directory to GitHub.
 

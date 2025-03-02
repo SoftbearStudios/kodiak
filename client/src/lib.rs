@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #![feature(extract_if)]
 #![feature(hash_extract_if)]
@@ -21,7 +21,6 @@
 #![feature(stmt_expr_attributes)]
 #![feature(iter_intersperse)]
 #![feature(option_get_or_insert_default)]
-#![feature(cursor_remaining)]
 #![feature(round_char_boundary)]
 #![feature(num_midpoint)]
 

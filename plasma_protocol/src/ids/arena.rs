@@ -1,10 +1,9 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 use super::{InstanceNumber, InvitationId, PlayerId, ReconnectionToken, TierNumber};
 use crate::{
     impl_wrapper_display, impl_wrapper_from_str, InvalidRealmId, InvalidSceneId, RealmId, SceneId,
-    StrVisitor,
 };
 use bitcode::{Decode, Encode};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -57,7 +56,7 @@ mod arena_id_serde {
             D: Deserializer<'de>,
         {
             if deserializer.is_human_readable() {
-                deserializer.deserialize_str(StrVisitor).and_then(|s| {
+                <String>::deserialize(deserializer).and_then(|s| {
                     Self::from_str(&s).map_err(|_| serde::de::Error::custom("invalid arena id"))
                 })
             } else {
@@ -241,7 +240,7 @@ mod arena_query_serde {
             D: Deserializer<'de>,
         {
             if deserializer.is_human_readable() {
-                deserializer.deserialize_str(StrVisitor).and_then(|s| {
+                <String>::deserialize(deserializer).and_then(|s| {
                     Self::from_str(&s)
                         .map_err(|_| serde::de::Error::custom("invalid symbolic arena id"))
                 })
