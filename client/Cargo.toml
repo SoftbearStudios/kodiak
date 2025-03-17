@@ -1,0 +1,163 @@
+[package]
+authors = ["Softbear, Inc."]
+edition = "2021"
+license = "LGPL-3.0-or-later"
+name = "kodiak_client"
+version = "0.1.1"
+workspace = ".."
+
+[features]
+audio = [
+    "kodiak_common/audio_macros",
+    "web-sys/AudioBuffer",
+    "web-sys/AudioBufferSourceNode",
+    "web-sys/AudioContext",
+    "web-sys/AudioContextState",
+    "web-sys/AudioDestinationNode",
+    "web-sys/AudioParam",
+    "web-sys/GainNode",
+    "web-sys/OscillatorNode",
+    "yew_icons/BootstrapVolumeDownFill",
+    "yew_icons/BootstrapVolumeMute",
+    "yew_icons/BootstrapVolumeUpFill",
+    "yew_icons/BootstrapVolumeUpFill",
+]
+default = ["joined", "zoom"]
+high_contrast_setting = []
+joined = []
+log = ["dep:log", "console_log", "kodiak_common/log"]
+mouse_over_ui = []
+music = ["audio"]
+pointer_lock = []
+# Renderer uses scalar-math feature to avoid alignment requirements that break GL compatibility.
+renderer = [ "bytemuck", "kodiak_common/glam_bytemuck", "kodiak_common/glam_scalar_math", "linear-map",
+    'web-sys/AngleInstancedArrays', 'web-sys/CanvasRenderingContext2d', 'web-sys/Document', 'web-sys/HtmlCanvasElement',
+    'web-sys/HtmlImageElement', 'web-sys/OesElementIndexUint', 'web-sys/OesStandardDerivatives', 'web-sys/OesVertexArrayObject',
+    'web-sys/TextMetrics', 'web-sys/WebGlBuffer', 'web-sys/WebGlFramebuffer', 'web-sys/WebGlProgram',
+    'web-sys/WebGlRenderbuffer', 'web-sys/WebGlRenderingContext', 'web-sys/WebGlShader', 'web-sys/WebGlShaderPrecisionFormat',
+    'web-sys/WebGlTexture', 'web-sys/WebGlUniformLocation', 'web-sys/WebGlVertexArrayObject', 'web-sys/WebSocket' ]
+renderer2d = [ "bytemuck", "renderer" ]
+renderer3d = [ "base64", "bytemuck", "renderer" ]
+renderer_anisotropy = ["web-sys/ExtTextureFilterAnisotropic"]
+# Waits for shaders to compile before rendering.
+renderer_blocking = ["renderer"]
+renderer_depth_texture = ["renderer"]
+renderer_fxaa = ["renderer"]
+renderer_query = [ "renderer", "webgl2", "web-sys/WebGlQuery"]
+renderer_render_float = [ "webgl2" ]
+renderer_srgb = [ "dep:fast-srgb8", "renderer", "web-sys/ExtSRgb" ]
+renderer_webgl2 = [ "renderer", "web-sys/WebGl2RenderingContext" ]
+renderer3d_model = ["kodiak_common/ply_macros", "renderer3d"]
+renderer3d_shadow = [ "renderer_depth_texture", "renderer3d"]
+webgl2 = []
+zoom = [ "yew_icons/BootstrapZoomIn", "yew_icons/BootstrapZoomOut" ]
+
+[dependencies]
+base64 = { version = "0.22.1", optional = true }
+bytemuck = { version = "1.9.1", features = ["derive"], optional = true }
+console_error_panic_hook = "0.1"
+console_log = {version = "1.0.0", optional = true }
+cub = { default-features = false, features = [ "yew_markdown" ], git = "https://github.com/softbearstudios/cub", tag = "0.1.13" }
+#cub = { default-features = false, features = [ "yew_markdown" ], path = "../../../cub", version = "0" }
+fast-srgb8 = { version = "1.0.0", optional = true }
+getrandom = { version = "0.2", features = ["js"] }
+glam = { version = "0.22", features = ["scalar-math", "bytemuck"] } # Use scalar-math feature to avoid alignment requirements that break GL compatibility. # from common
+gloo = "0.8"
+gloo-events = "0.1"
+gloo-render = "0.1"
+js-sys = "0.3"
+kodiak_common = { path = "../common", features = [ "glam_serde" ] }
+linear-map = { version = "1.2.0", optional = true }
+log = { version = "0.4.17", optional = true }
+rc_borrow_mut = { git = "https://github.com/finnbear/rc_borrow_mut" }
+serde = "1"
+serde_json = { version = "1", features = ["float_roundtrip"] }
+serde_urlencoded = "0.7"
+strum = "0.24"
+strum_macros = "0.24"
+stylist = { version = "0.13", features = [ "yew_integration", "macros" ], default-features = false }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+yew = {version = "0.21.0", features = ["csr"]}
+yew_icons = { version = "0.8", features = [
+    "BootstrapDiscord",
+    "BootstrapGear",
+    "BootstrapGithub",
+    "BootstrapGlobe2",
+    "BootstrapPersonPlus",
+    "ExtraGooglePlay",
+    "FontAwesomeSolidFire",
+    "FontAwesomeSolidAward",
+    "FontAwesomeSolidSquareCaretLeft",
+    "FontAwesomeSolidSquareCaretRight",
+    "HeroiconsMiniSolidXMark",
+    "LucideMenu"
+]}
+yew-router = "0.18.0"
+yew_confetti = "0.4.2"
+
+[dependencies.web-sys]
+version = "0.3.72"
+features = [
+    'BinaryType',
+    'Blob',
+    'CloseEvent',
+    'Document',
+    'DomRect',
+    'Element',
+    'ErrorEvent',
+    'Event',
+    'FileReader',
+    'FocusEvent',
+    'HtmlCanvasElement',
+    'HtmlInputElement',
+    'KeyboardEvent',
+    'Location',
+    'MessageEvent',
+    'Navigator',
+    'OrientationLockType',
+    'ReadableStream',
+    'ReadableStreamDefaultReader',
+    'Response',
+    'Screen',
+    'ScreenOrientation',
+    'Storage',
+    'Touch',
+    'TouchEvent',
+    'TouchList',
+    'UrlSearchParams',
+    'VisibilityState',
+    'WebSocket',
+    'WheelEvent',
+    'Clipboard',
+    'FocusEvent',
+    'FormData',
+    'HtmlSelectElement',
+    'Location',
+    'MessageEvent',
+    'Navigator',
+    'Performance',
+    'PerformanceNavigationTiming',
+    'PromiseRejectionEvent',
+    'HtmlDivElement',
+    'UiEvent',
+    'VisibilityState',
+    'WebTransport',
+    'WebTransportBidirectionalStream',
+    'WebTransportCloseInfo',
+    'WebTransportCongestionControl',
+    'WebTransportDatagramDuplexStream',
+    'WebTransportHash',
+    'WebTransportReceiveStream',
+    'WebTransportSendStream',
+    'WebTransportOptions',
+    'Window',
+    'WritableStream',
+    'WritableStreamDefaultWriter',
+    'WebGlContextEvent',
+]
+
+[dev-dependencies]
+rand = "0.8.4"
+tokio = {version = "1.0", features = ["full"]}
+yew = {version = "0.20.0", features = ["ssr"]}

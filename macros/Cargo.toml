@@ -1,0 +1,30 @@
+[package]
+authors = ["Softbear, Inc."]
+edition = "2021"
+license = "LGPL-3.0-or-later"
+name = "kodiak_macros"
+version = "0.1.1"
+workspace = ".."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+[dependencies]
+convert_case = "0.5"
+itertools = "0.10.5"
+litrs = "0.2"
+nom = { version = "7.1", optional = true }
+proc-macro2 = "1.0"
+quote = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+syn = { version = "1.0", features = [
+    "full",
+    "extra-traits",
+] } # extra traits required for Hash + Eq
+
+[features]
+audio = []
+ply = ["nom"]
