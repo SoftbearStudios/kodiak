@@ -1,0 +1,51 @@
+[package]
+authors = ["Softbear, Inc."]
+edition = "2021"
+license = "LGPL-3.0-or-later"
+name = "plasma_protocol"
+version = "0.1.1"
+workspace = ".."
+
+[dependencies]
+actix = { version = "0.13", optional = true }
+arrayvec = { version = "0.7", features = ["serde"] }
+bitcode = {version = "0.6.4", features = ["arrayvec", "glam"] }
+cub = { default-features = false, features = [ "bitcode", "time_id" ], git = "https://github.com/softbearstudios/cub", tag = "0.1.13" }
+#cub = { default-features = false, features = [ "bitcode", "time_id" ], path = "../../../cub", version = "0" }
+derive_more = { version = "0.99", default-features = false, features = ["add"] }
+hyperloglog = { git = "https://github.com/finnbear/hyperloglog", features = ["serde"] }
+log = { version = "0.4", optional = true }
+minicdn = { version = "0.2.4", default-features = false }
+rand = "0.8"
+rustrict = { version = "0.7.33", default-features = false, optional = true }
+serde = { version = "1.0", features = ["derive"] }
+serde-big-array = "0.4.1"
+serde_json = { version = "1", features = [ "raw_value" ] }
+strum = { version = "0.24", features = ["derive"] }
+
+[features]
+admin = [
+    "minicdn/mime", "minicdn/etag", "minicdn/gzip",
+    "minicdn/brotli", "minicdn/webp", "minicdn/serde",
+    "minicdn/config", "minicdn/walkdir", "minicdn/track_path",
+    "rustrict/customize", "rustrict/serde"
+]
+plasma = [
+    "rustrict/censor",
+    "rustrict/context",
+    "rustrict/width",
+    "rustrict/pii",
+    "rustrict/serde",
+]
+server = [
+    "actix",
+    "admin",
+    "log",
+    "plasma",
+    "serde/rc",
+]
+bitcode_arrayvec = ["bitcode/arrayvec"]
+bitcode_derive = ["bitcode/derive"]
+bitcode_glam = ["bitcode/glam"]
+bitcode_serde = ["bitcode/serde"]
+bitcode_std = ["bitcode/std"]
