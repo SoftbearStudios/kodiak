@@ -77,7 +77,7 @@ pub fn ranks_dialog() -> Html {
         <NexusDialog title={translate!(t, "Ranks")}>
             <p>{translate!(t, "You can earn ranks by playing and getting better at the game.")}</p>
             <p>{translate!(t, "It is possible to reach the highest rank by playing normally, but defeating players with considerably more score than you is the fastest way to rank up.")}</p>
-            if ctw.features.outbound.accounts.is_some() && ctw.setting_cache.user_name.is_none() && ctw.setting_cache.nick_name.is_none() {
+            if ctw.features.outbound.accounts.is_some() && !ctw.setting_cache.user {
                 <p>{translate!(t, "Clearing your cookies will reset your rank, unless you make an account.")}</p>
             }
             <div class={container_style}>

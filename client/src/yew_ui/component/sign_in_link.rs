@@ -27,7 +27,11 @@ use yew::{
 pub struct Login {
     pub session_id: SessionId,
     pub session_token: SessionToken,
+    #[serde(default)]
     pub nick_name: Option<String>,
+    #[serde(default)]
+    pub user: bool,
+    #[serde(default)]
     pub user_name: Option<String>,
     #[serde(default)]
     pub store_enabled: bool,
@@ -186,8 +190,9 @@ pub fn sign_in_link(props: &SignInLinkProps) -> Html {
 
     html! {
         if !props.hide_login && let Some((sign_in_with, onclick_login)) = sign_in_with(&features.outbound.accounts) {
-            if ctw.setting_cache.user_name.is_some() {
-                <a {href} onclick={onclick_profile}>{account_profile()}
+            if ctw.setting_cache.user {
+                <a {href} onclick={onclick_profile}>
+                    {account_profile()}
                     if let Some(nick_name) = ctw.setting_cache.nick_name {
                         {" ("}{nick_name}{")"}
                     }

@@ -10,6 +10,7 @@ use crate::observer::ObserverUpdate;
 use crate::rate_limiter::{RateLimiterProps, RateLimiterState};
 use crate::service::{Arena, ArenaService, LeaderboardRepo, SceneRepo};
 use crate::{ArenaId, RealmId, ServerId};
+use kodiak_common::{ArenaSettingsDto, EngineArenaSettings};
 use log::info;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -133,7 +134,13 @@ impl<G: ArenaService> RealmRepo<G> {
             .entry(arena_id.scene_id)
             .or_insert_with(|| {
                 let mut arena = Arena::new(server_id, arena_id, send_plasma_request);
-                arena.arena_context.settings.bots = self.bots;
+                arena.arena_context.set_settings(ArenaSettingsDto {
+                    engine: EngineArenaSettings {
+                        bots: self.bots.filter(|_| arena_id.realm_id.is_public_default()),
+                        bot_aggression: None,
+                    },
+                    game: Default::default(),
+                });
                 Scene {
                     arena,
                     per_scene: Default::default(),

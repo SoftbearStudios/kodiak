@@ -562,6 +562,9 @@ impl<G: GameClient> Component for App<G> {
                     }
                     context
                         .common_settings
+                        .set_user(login.user, &mut context.browser_storages);
+                    context
+                        .common_settings
                         .set_nick_name(login.nick_name, &mut context.browser_storages);
                     context
                         .common_settings
@@ -1060,8 +1063,7 @@ impl<G: GameClient> Component for App<G> {
                     Some("signOut" | "signOutUser" | "profileDeleted") => {
                         if opt_str == Some("signOutUser")
                             && let Some(settings) = common_settings(&self.client_broker)
-                            && settings.nick_name.is_none()
-                            && settings.user_name.is_none()
+                            && !settings.user
                         {
                             // No-op to prevent creating two visitors.
                         } else {
@@ -1200,8 +1202,7 @@ impl<G: GameClient> Component for App<G> {
         let mut interstitial_ad = self.interstitial_ad.clone();
         let mut rewarded_ad = self.rewarded_ad.clone();
 
-        let account = self.features.outbound.accounts.is_some()
-            && (setting_cache.user_name.is_some() || setting_cache.nick_name.is_some());
+        let account = self.features.outbound.accounts.is_some() && setting_cache.user;
         if account && self.features.account_exempt_banner_ads {
             banner_ad = BannerAd::Unavailable;
         }

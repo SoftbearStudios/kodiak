@@ -35,24 +35,16 @@ macro_rules! hb_hash_f32s {
                     hash_f32s(self, state);
                 }
             }
-
-            impl<const N: usize> HbHash for [$t; N] {
-                fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-                    for item in self {
-                        hash_f32s(item, state);
-                    }
-                }
-            }
         )*
     }
 }
 
 hb_hash_f32s!(Vec2, Vec3, Vec3A, Vec4, Mat2, Mat3, Mat4, Quat);
 
-impl<const N: usize> HbHash for [f32; N] {
+impl<T: HbHash, const N: usize> HbHash for [T; N] {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         for item in self {
-            hash_f32(*item, state);
+            item.hash(state);
         }
     }
 }

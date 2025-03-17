@@ -1,10 +1,12 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+use super::disposition::LockstepDispositionInner;
 use super::{
     Lockstep, LockstepInputId, LockstepInputQueue, LockstepInputWindow, LockstepRequest,
     LockstepTick, LockstepUpdate, LockstepWorld,
 };
+use crate::lockstep::disposition::LockstepDisposition;
 use crate::{ArenaMap, PlayerId};
 use heapless::HistoryBuffer;
 
@@ -24,6 +26,7 @@ where
     pub heard_from_server: bool,
     /// Fractional ticks since last predicted tick.
     pub since_predicted_tick: f32,
+    pub smoothed_normalized_ticks_since_real: f32,
     pub server_buffered_inputs: usize,
     pub ping_latencies: HistoryBuffer<u32, { W::TPS }>,
     pub total_latencies: HistoryBuffer<u32, { W::TPS }>,
@@ -46,6 +49,7 @@ where
             interpolated: Default::default(),
             heard_from_server: false,
             since_predicted_tick: 0.0,
+            smoothed_normalized_ticks_since_real: 0.0,
             server_buffered_inputs: 0,
             ping_latencies: Default::default(),
             total_latencies: Default::default(),
@@ -127,15 +131,22 @@ where
         }
         self.input_queue.acknowledged(last_applied_id);
         self.heard_from_server = true;
+        self.smoothed_normalized_ticks_since_real -= 1.0;
 
         // Lockstep.
-        self.real.tick(tick, None, false, &mut |info| {
-            if let Some(player_id) = self.player_id
-                && !W::is_predicted(&info, player_id)
-            {
-                self.info.push(info);
-            }
-        });
+        self.real.tick(
+            tick,
+            &LockstepDisposition {
+                inner: LockstepDispositionInner::GroundTruth,
+            },
+            &mut |info| {
+                if let Some(player_id) = self.player_id
+                    && !W::is_predicted(&info, player_id)
+                {
+                    self.info.push(info);
+                }
+            },
+        );
 
         // Prediction.
         let old_predicted = std::mem::replace(&mut self.predicted, self.real.clone());
@@ -158,14 +169,16 @@ where
             self.predicted = old_predicted.lerp(
                 &self.predicted,
                 (W::TICK_PERIOD_SECS * 2.0).min(1.0),
-                self.player_id,
-                false,
+                &LockstepDisposition {
+                    inner:
+                        LockstepDispositionInner::LerpingOldCurrentPredictionToNewCurrentPrediction,
+                },
             );
         }
 
         // Prediction next.
         self.predicted_next = self.predicted.clone();
-        let old_predicted_next =
+        let _old_predicted_next =
             std::mem::replace(&mut self.predicted_next, self.predicted.clone());
         Self::predict(
             &mut self.predicted_next,
@@ -174,16 +187,9 @@ where
             None,
             &mut |_| {},
         );
-        if false {
-            self.predicted_next = old_predicted_next.lerp(
-                &self.predicted_next,
-                W::TICK_PERIOD_SECS,
-                self.player_id,
-                false,
-            );
-        }
 
         // Interpolation.
+        // TODO: need to recalculate time since prediction.
         self.update_interpolated();
 
         // 0 is used when server is missing a command, may be too high if we sent to the old server
@@ -198,8 +204,12 @@ where
         self.interpolated = self.predicted.lerp(
             &self.predicted_next,
             self.since_predicted_tick,
-            self.player_id,
-            true,
+            &LockstepDisposition {
+                inner: LockstepDispositionInner::LerpingCurrentPredictionToNextPrediction {
+                    perspective: self.player_id,
+                    smoothed_normalized_ticks_since_real: self.smoothed_normalized_ticks_since_real,
+                },
+            },
         );
     }
 
@@ -265,6 +275,15 @@ where
 
         //#[cfg(feature = "log")]
         //log::info!("whole={whole} fract={:.2}", self.since_predicted_tick);
+
+        self.smoothed_normalized_ticks_since_real += elapsed_seconds * (1.0 / W::TICK_PERIOD_SECS);
+        self.smoothed_normalized_ticks_since_real += (-self.smoothed_normalized_ticks_since_real)
+            .clamp(
+                -elapsed_seconds * (0.1 / W::TICK_PERIOD_SECS),
+                elapsed_seconds * (0.1 / W::TICK_PERIOD_SECS),
+            );
+        self.smoothed_normalized_ticks_since_real =
+            self.smoothed_normalized_ticks_since_real.clamp(-1.0, 1.0);
 
         self.update_interpolated();
 
@@ -391,8 +410,12 @@ where
                 inputs,
                 ..Default::default()
             },
-            player_id,
-            interpolation_prediction,
+            &LockstepDisposition {
+                inner: LockstepDispositionInner::Predicting {
+                    perspective: player_id,
+                    additional_interpolation_prediction: interpolation_prediction,
+                },
+            },
             on_info,
         );
     }

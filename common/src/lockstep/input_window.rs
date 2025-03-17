@@ -25,11 +25,13 @@ where
 {
     /// Converts [`CommandWindow`] into an iterator of [`Command`]s from oldest to newest.
     pub fn into_input_iter(self) -> impl Iterator<Item = LockstepInput<W::Input>> {
-        let last_index = self.sliding_window.len() - 1;
+        let len = self.sliding_window.len();
         self.sliding_window
             .into_iter()
             .enumerate()
             .map(move |(i, input)| {
+                // Put here to avoid overflow if client sends nothing.
+                let last_index = len - 1;
                 let reverse_index = (last_index - i) as LockstepInputId;
                 LockstepInput {
                     inner: input,

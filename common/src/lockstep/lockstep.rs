@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+use super::disposition::LockstepDisposition;
 use super::{LockstepContext, LockstepPlayer, LockstepTick};
 use crate::bitcode::{self, *};
 use crate::{ArenaEntry, CompatHasher, PlayerId};
@@ -60,6 +61,7 @@ where
 
 pub trait LockstepWorld: Hash + Debug + Clone + Sized {
     const TPS: usize = 16;
+    /// Seconds per tick. Do not overwrite.
     const TICK_PERIOD_SECS: f32 = 1.0 / (Self::TPS as f32);
     // TODO compress controls better so we can send more within min ethernet packet size of 64 bytes.
     // Before increasing this, make sure max ethernet packet size < 64 bytes so good network
@@ -75,6 +77,8 @@ pub trait LockstepWorld: Hash + Debug + Clone + Sized {
     /// Do not overwrite.
     const MAX_LATENCY: u8 = Self::LAG_COMPENSATION as u8 - 1;
     /// When server gives update, interpolate from the old prediction to the new one.
+    ///
+    /// Do not use if there are physics discontinuities.
     const INTERPOLATE_PREDICTION: bool = false;
 
     type Player: Hash + Debug + Clone + Encode + DecodeOwned;
@@ -86,8 +90,7 @@ pub trait LockstepWorld: Hash + Debug + Clone + Sized {
         &mut self,
         _tick: Self::Tick,
         context: &mut LockstepContext<Self>,
-        predicting: Option<PlayerId>,
-        interpolation_prediction: bool,
+        disposition: &LockstepDisposition,
         on_info: &mut dyn FnMut(Self::Info),
     ) where
         [(); Self::LAG_COMPENSATION]:;
@@ -103,22 +106,17 @@ pub trait LockstepWorld: Hash + Debug + Clone + Sized {
     }
 
     /// t is (0, 1)
-    fn lerp(
-        &self,
-        next: &Self,
-        _t: f32,
-        _predicting: Option<PlayerId>,
-        _interpolation_prediction: bool,
-    ) -> Self {
+    fn lerp(&self, next: &Self, _t: f32, _disposition: &LockstepDisposition) -> Self {
         next.clone()
     }
 
     /// t is (0, 1)
     fn lerp_player(
+        _player_id: PlayerId,
         _player: &Self::Player,
         next: &Self::Player,
         _t: f32,
-        _interpolation_prediction: bool,
+        _disposition: &LockstepDisposition,
     ) -> Self::Player {
         next.clone()
     }
@@ -154,11 +152,10 @@ where
     pub(crate) fn tick(
         &mut self,
         tick: LockstepTick<W>,
-        predicting: Option<PlayerId>,
-        interpolation_prediction: bool,
+        disposition: &LockstepDisposition,
         on_info: &mut dyn FnMut(W::Info),
     ) {
-        self.context.tick_id += 1;
+        self.context.tick_id = self.context.tick_id.wrapping_add(1);
         for (player_id, overwrite) in tick.overwrites {
             if let Some(new) = overwrite {
                 match self.context.players.entry(player_id) {
@@ -179,34 +176,20 @@ where
         for (player_id, input) in tick.inputs {
             if let Some(player) = self.context.players.get_mut(player_id) {
                 player.input = input;
-            } else if predicting.is_none() && !interpolation_prediction {
+            } else if disposition.predicting().is_none() && !disposition.interpolation_prediction()
+            {
                 panic!("missing {player_id:?}");
             }
         }
-        self.world.tick(
-            tick.inner,
-            &mut self.context,
-            predicting,
-            interpolation_prediction,
-            on_info,
-        );
+        self.world
+            .tick(tick.inner, &mut self.context, disposition, on_info);
     }
 
-    pub fn lerp(
-        &self,
-        next: &Self,
-        t: f32,
-        predicting: Option<PlayerId>,
-        interpolation_prediction: bool,
-    ) -> Self {
+    pub fn lerp(&self, next: &Self, t: f32, disposition: &LockstepDisposition) -> Self {
         let t = t.clamp(0.0, 1.0);
         Self {
-            context: self
-                .context
-                .lerp(&next.context, t, predicting, interpolation_prediction),
-            world: self
-                .world
-                .lerp(&next.world, t, predicting, interpolation_prediction),
+            context: self.context.lerp(&next.context, t, disposition),
+            world: self.world.lerp(&next.world, t, disposition),
         }
     }
 }

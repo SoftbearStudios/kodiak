@@ -504,6 +504,16 @@ impl Renderer {
         }
     }
 
+    /// Configures polygon offset for depth computations.
+    pub fn set_polygon_offset(&self, factor: f32, units: f32) {
+        if factor == 0.0 && units == 0.0 {
+            self.gl.disable(Gl::POLYGON_OFFSET_FILL);
+        } else {
+            self.gl.enable(Gl::POLYGON_OFFSET_FILL);
+            self.gl.polygon_offset(factor, units);
+        }
+    }
+
     /// Inverts depth test direction.
     #[doc(hidden)]
     pub fn invert_depth(&self, invert: bool) {

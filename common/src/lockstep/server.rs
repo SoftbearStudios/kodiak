@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+use super::disposition::{LockstepDisposition, LockstepDispositionInner};
 use super::{
     Lockstep, LockstepClientData, LockstepInput, LockstepRequest, LockstepTick, LockstepUpdate,
     LockstepWorld,
@@ -248,7 +249,12 @@ where
     }
 
     pub fn post_update(&mut self, on_info: &mut dyn FnMut(W::Info)) {
-        self.real
-            .tick(std::mem::take(&mut self.current), None, false, on_info);
+        self.real.tick(
+            std::mem::take(&mut self.current),
+            &LockstepDisposition {
+                inner: LockstepDispositionInner::GroundTruth,
+            },
+            on_info,
+        );
     }
 }

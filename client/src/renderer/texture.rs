@@ -659,6 +659,7 @@ impl Texture {
             repeating,
             false,
             false,
+            #[cfg(feature = "renderer_anisotropy")]
             false,
             TextureType::D2Array(layers.try_into().expect("max layers exceeded")),
         )

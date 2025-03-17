@@ -3,11 +3,10 @@ authors = ["Softbear, Inc."]
 edition = "2021"
 license = "LGPL-3.0-or-later"
 name = "kodiak_server"
-version = "0.1.1"
+version = "0.1.2"
 workspace = ".."
 
 [features]
-glam_serde = [ "kodiak_common/glam_serde" ]
 log_release_max_level_info = [ "log/release_max_level_info" ]
 
 [dependencies]

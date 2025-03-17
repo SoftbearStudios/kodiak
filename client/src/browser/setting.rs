@@ -141,6 +141,8 @@ pub struct CommonSettings {
     /// Not manually set by the player.
     #[setting(optional)]
     pub nick_name: Option<String>,
+    /// Is a signed-in user, not just a visitor. Not manually set by the player.
+    pub user: bool,
     /// Not manually set by the player.
     #[setting(optional)]
     pub user_name: Option<String>,
@@ -237,6 +239,7 @@ impl Default for CommonSettings {
             session_id: None,
             session_token: None,
             nick_name: None,
+            user: false,
             user_name: None,
             store_enabled: false,
             date_created: None,
@@ -268,6 +271,7 @@ fn random_guest() -> PlayerAlias {
         "Diguested",
         "EnderGuest",
         "Guest",
+        "GuestAgain",
         "Guestament",
         "Guestavo",
         "Guestbound",
@@ -286,6 +290,8 @@ fn random_guest() -> PlayerAlias {
         "GuestOption",
         "Guesture",
         "GuestWestern",
+        "GuestWhat",
+        "GuestWho",
         "Guesty",
         "Inguest",
         "Inguested",

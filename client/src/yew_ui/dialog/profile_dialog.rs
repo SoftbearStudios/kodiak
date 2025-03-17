@@ -13,7 +13,7 @@ pub fn profile_dialog() -> Html {
     html! {
         if ctw.features.outbound.accounts.is_some() {
             <NexusDialog title={t.profile_label()}>
-                if ctw.setting_cache.user_name.is_some() || ctw.setting_cache.nick_name.is_some() {
+                if ctw.setting_cache.user {
                     <iframe
                         style={"border: 0; width: calc(100% - 0.5em); height: calc(100% - 1em);"}
                         src={

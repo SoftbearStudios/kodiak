@@ -3,7 +3,7 @@ authors = ["Softbear, Inc."]
 edition = "2021"
 license = "LGPL-3.0-or-later"
 name = "kodiak_client"
-version = "0.1.1"
+version = "0.1.2"
 workspace = ".."
 
 [features]
@@ -29,8 +29,8 @@ log = ["dep:log", "console_log", "kodiak_common/log"]
 mouse_over_ui = []
 music = ["audio"]
 pointer_lock = []
-# Renderer uses scalar-math feature to avoid alignment requirements that break GL compatibility.
-renderer = [ "bytemuck", "kodiak_common/glam_bytemuck", "kodiak_common/glam_scalar_math", "linear-map",
+# Renderer needs scalar-math feature to avoid alignment requirements that break GL compatibility.
+renderer = [ "bytemuck", "kodiak_common/glam_bytemuck", "linear-map",
     'web-sys/AngleInstancedArrays', 'web-sys/CanvasRenderingContext2d', 'web-sys/Document', 'web-sys/HtmlCanvasElement',
     'web-sys/HtmlImageElement', 'web-sys/OesElementIndexUint', 'web-sys/OesStandardDerivatives', 'web-sys/OesVertexArrayObject',
     'web-sys/TextMetrics', 'web-sys/WebGlBuffer', 'web-sys/WebGlFramebuffer', 'web-sys/WebGlProgram',
@@ -66,7 +66,7 @@ gloo = "0.8"
 gloo-events = "0.1"
 gloo-render = "0.1"
 js-sys = "0.3"
-kodiak_common = { path = "../common", features = [ "glam_serde" ] }
+kodiak_common = { path = "../common" }
 linear-map = { version = "1.2.0", optional = true }
 log = { version = "0.4.17", optional = true }
 rc_borrow_mut = { git = "https://github.com/finnbear/rc_borrow_mut" }
