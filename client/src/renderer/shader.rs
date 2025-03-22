@@ -469,6 +469,8 @@ pub struct ShaderBinding<'a> {
     bound_textures: Cell<u32>, // bitset
     #[cfg(feature = "renderer_webgl2")]
     bound_texture_arrays: Cell<u32>, // bitset that is a subset of bound_textures
+    #[cfg(feature = "renderer_webgl2")]
+    bound_texture_3ds: Cell<u32>, // bitset that is a subset of bound_textures
     bound_texture_cubes: Cell<u32>, // bitset that is a subset of bound_textures
 }
 
@@ -487,6 +489,8 @@ impl<'a> ShaderBinding<'a> {
             bound_textures: Default::default(),
             #[cfg(feature = "renderer_webgl2")]
             bound_texture_arrays: Default::default(),
+            #[cfg(feature = "renderer_webgl2")]
+            bound_texture_3ds: Default::default(),
             bound_texture_cubes: Default::default(),
         }
     }
@@ -518,6 +522,10 @@ impl<'a> ShaderBinding<'a> {
         if self.bound_texture_arrays.get() & bit != 0 {
             return TextureType::D2Array(0);
         }
+        #[cfg(feature = "renderer_webgl2")]
+        if self.bound_texture_3ds.get() & bit != 0 {
+            return TextureType::D3(0);
+        }
 
         if self.bound_texture_cubes.get() & bit != 0 {
             TextureType::Cube
@@ -535,6 +543,8 @@ impl<'a> ShaderBinding<'a> {
             TextureType::D2 => 0,
             #[cfg(feature = "renderer_webgl2")]
             TextureType::D2Array(_) => self.bound_texture_arrays.update(|v| v | bit),
+            #[cfg(feature = "renderer_webgl2")]
+            TextureType::D3(_) => self.bound_texture_3ds.update(|v| v | bit),
             TextureType::Cube => self.bound_texture_cubes.update(|v| v | bit),
         };
     }

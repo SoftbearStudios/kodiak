@@ -244,18 +244,25 @@ pub enum TextureType {
     /// A 2 dimensional array [`Texture`].
     #[cfg(feature = "renderer_webgl2")]
     D2Array(u16),
+    /// A 3 dimensional [`Texture`]
+    #[cfg(feature = "renderer_webgl2")]
+    D3(u16),
     /// A cube map [`Texture`].
     Cube,
 }
 
 impl TextureType {
     /// Returns the depth of the [`Texture`].
-    #[cfg(feature = "renderer_webgl2")]
     pub(crate) fn depth(self) -> u32 {
+        self.depth_if_3d().unwrap_or(1)
+    }
+
+    /// Returns the depth of the [`Texture`] if it's [`TextureType::D2Array`] or [`TextureType::D3`].
+    pub(crate) fn depth_if_3d(self) -> Option<u32> {
         match self {
             #[cfg(feature = "renderer_webgl2")]
-            Self::D2Array(depth) => depth as u32,
-            _ => 1,
+            Self::D2Array(depth) | Self::D3(depth) => Some(depth as u32),
+            _ => None,
         }
     }
 
@@ -265,6 +272,8 @@ impl TextureType {
             Self::D2 => Gl::TEXTURE_2D,
             #[cfg(feature = "renderer_webgl2")]
             Self::D2Array(_) => Gl::TEXTURE_2D_ARRAY,
+            #[cfg(feature = "renderer_webgl2")]
+            Self::D3(_) => Gl::TEXTURE_3D,
             Self::Cube => Gl::TEXTURE_CUBE_MAP,
         }
     }
@@ -275,6 +284,8 @@ impl TextureType {
             Self::D2 => Gl::TEXTURE_BINDING_2D,
             #[cfg(feature = "renderer_webgl2")]
             Self::D2Array(_) => Gl::TEXTURE_BINDING_2D_ARRAY,
+            #[cfg(feature = "renderer_webgl2")]
+            Self::D3(_) => Gl::TEXTURE_BINDING_3D,
             Self::Cube => Gl::TEXTURE_BINDING_CUBE_MAP,
         }
     }
@@ -286,6 +297,8 @@ impl TextureType {
             Self::D2 => [D2].as_slice(),
             #[cfg(feature = "renderer_webgl2")]
             Self::D2Array(_) => [D2Array].as_slice(),
+            #[cfg(feature = "renderer_webgl2")]
+            Self::D3(_) => [D3].as_slice(),
             Self::Cube => [PX, NX, PY, NY, PZ, NZ].as_slice(),
         }
         .iter()
@@ -302,6 +315,9 @@ pub(crate) enum TextureFace {
     /// A 3 dimensional [`Texture`]'s face of [`TextureType::D2Array`].
     #[cfg(feature = "renderer_webgl2")]
     D2Array,
+    /// A 3 dimensional [`Texture`]'s face of [`TextureType::D3`].
+    #[cfg(feature = "renderer_webgl2")]
+    D3,
     /// Positive X face of [`TextureType::Cube`].
     PX,
     /// Negative X face of [`TextureType::Cube`].
@@ -322,7 +338,7 @@ impl TextureFace {
         match self {
             Self::D2 => [0; 3],
             #[cfg(feature = "renderer_webgl2")]
-            Self::D2Array => [0; 3],
+            Self::D2Array | Self::D3 => [0; 3],
             Self::PX => [255, 127, 127],
             Self::NX => [0, 127, 127],
             Self::PY => [127, 255, 127],
@@ -338,6 +354,8 @@ impl TextureFace {
             Self::D2 => Gl::TEXTURE_2D,
             #[cfg(feature = "renderer_webgl2")]
             Self::D2Array => return Err(Gl::TEXTURE_2D_ARRAY),
+            #[cfg(feature = "renderer_webgl2")]
+            Self::D3 => return Err(Gl::TEXTURE_3D),
             Self::PX => Gl::TEXTURE_CUBE_MAP_POSITIVE_X,
             Self::NX => Gl::TEXTURE_CUBE_MAP_NEGATIVE_X,
             Self::PY => Gl::TEXTURE_CUBE_MAP_POSITIVE_Y,
@@ -351,7 +369,7 @@ impl TextureFace {
         let face = match self {
             Self::D2 => return img_url.to_owned(),
             #[cfg(feature = "renderer_webgl2")]
-            Self::D2Array => return img_url.to_owned(),
+            Self::D2Array | Self::D3 => return img_url.to_owned(),
             Self::PX => "px",
             Self::NX => "nx",
             Self::PY => "py",
@@ -401,8 +419,28 @@ impl Texture {
     /// Creates a new empty [`Texture`] with the given `format` and `linear_filter`. Mipmaps and repeating
     /// cannot be used.
     pub fn new_empty(renderer: &Renderer, format: TextureFormat, linear_filter: bool) -> Self {
+        Self::new_empty_inner(renderer, format, linear_filter, None)
+    }
+
+    /// Creates a new empty 3D [`Texture`] with the given `format` and `linear_filter`. Mipmaps and repeating
+    /// cannot be used.
+    #[cfg(feature = "renderer_webgl2")]
+    pub fn new_empty_3d(renderer: &Renderer, format: TextureFormat, linear_filter: bool, dimension3: u32) -> Self {
+        Self::new_empty_inner(renderer, format, linear_filter, Some(dimension3.try_into().expect("dimension3 too large")))
+    }
+
+    /// Creates a new empty [`Texture`] with the given `format` and `linear_filter`. Mipmaps and repeating
+    /// cannot be used.
+    fn new_empty_inner(renderer: &Renderer, format: TextureFormat, linear_filter: bool, dimension3: Option<u16>) -> Self {
         let gl = &renderer.gl;
-        let typ = TextureType::D2;
+        let typ = if let Some(_dimension3) = dimension3 {
+            #[cfg(not(feature = "renderer_webgl2"))]
+            unreachable!();
+            #[cfg(feature = "renderer_webgl2")]
+            TextureType::D3(_dimension3)
+        } else {
+            TextureType::D2
+        };
 
         let texture = Self::new(gl, UVec2::ZERO, format, typ);
         let target = typ.target();
@@ -411,6 +449,10 @@ impl Texture {
         // Can't be repeating because size isn't known yet.
         gl.tex_parameteri(target, Gl::TEXTURE_WRAP_S, Gl::CLAMP_TO_EDGE as i32);
         gl.tex_parameteri(target, Gl::TEXTURE_WRAP_T, Gl::CLAMP_TO_EDGE as i32);
+        #[cfg(feature = "renderer_webgl2")]
+        if dimension3.is_some() {
+            gl.tex_parameteri(target, Gl::TEXTURE_WRAP_R, Gl::CLAMP_TO_EDGE as i32);
+        }
 
         let filter = if linear_filter {
             Gl::LINEAR
@@ -449,7 +491,7 @@ impl Texture {
         bytes: Option<&[u8]>,
     ) {
         let typ = self.typ;
-        assert_eq!(typ, TextureType::D2);
+        assert_ne!(typ, TextureType::Cube);
         let target = typ.target();
         let gl = &renderer.gl;
         let binding = self.bind(renderer, 0);
@@ -459,15 +501,17 @@ impl Texture {
         let src_format = self.format.src_format();
         let src_type = self.format.src_type();
         let [width, height] = dimensions.to_array();
+        let depth = self.typ.depth();
 
         if let Some(bytes) = bytes {
             let pixel_size = self.format.pixel_size();
             assert_eq!(
-                width * height * pixel_size,
+                width * height * depth * pixel_size,
                 bytes.len() as u32,
-                "{}x{}x{}",
+                "{}x{}x{}x{}",
                 width,
                 height,
+                depth,
                 pixel_size
             );
         }
@@ -480,36 +524,73 @@ impl Texture {
 
         // Don't reallocate if dimensions haven't changed.
         if self.dimensions() == dimensions {
-            gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_opt_u8_array(
-                target,
-                level,
-                0,
-                0,
-                width as i32,
-                height as i32,
-                src_format,
-                src_type,
-                bytes,
-            )
-            .unwrap();
+            if let Some(_depth) = self.typ.depth_if_3d() {
+                #[cfg(not(feature = "renderer_webgl2"))]
+                unreachable!();
+                #[cfg(feature = "renderer_webgl2")]
+                gl.tex_sub_image_3d_with_opt_u8_array(
+                    target,
+                    level,
+                    0,
+                    0,
+                    0,
+                    width as i32,
+                    height as i32,
+                    _depth as i32,
+                    src_format,
+                    src_type,
+                    bytes,
+                ).unwrap();
+            } else {
+                gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_opt_u8_array(
+                    target,
+                    level,
+                    0,
+                    0,
+                    width as i32,
+                    height as i32,
+                    src_format,
+                    src_type,
+                    bytes,
+                )
+                .unwrap();
+            }
         } else {
             self.inner.dimensions.set(dimensions);
 
             let internal_format = self.format.internal_format();
             let border = 0;
 
-            gl.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
-                target,
-                level,
-                internal_format,
-                width as i32,
-                height as i32,
-                border,
-                src_format,
-                src_type,
-                bytes,
-            )
-            .unwrap();
+            if let Some(_depth) = self.typ.depth_if_3d() {
+                #[cfg(not(feature = "renderer_webgl2"))]
+                unreachable!();
+                #[cfg(feature = "renderer_webgl2")]
+                gl.tex_image_3d_with_opt_u8_array(
+                    target,
+                    level,
+                    internal_format,
+                    width as i32,
+                    height as i32,
+                    _depth as i32,
+                    border,
+                    src_format,
+                    src_type,
+                    bytes
+                ).unwrap();
+            } else {
+                gl.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
+                    target,
+                    level,
+                    internal_format,
+                    width as i32,
+                    height as i32,
+                    border,
+                    src_format,
+                    src_type,
+                    bytes,
+                )
+                .unwrap();
+            }
         }
 
         // Reset to the default alignment.

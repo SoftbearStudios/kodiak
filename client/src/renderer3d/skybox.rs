@@ -9,16 +9,26 @@ use crate::renderer::{
 use glam::Vec3;
 use kodiak_common::glam::{vec2, Vec2};
 
-/// A [`Layer`] that renders a skybox. Must be the first layer for now.
-pub struct SkyboxLayer<S: Skybox> {
+/// A [`Layer`] that renders a sky. Must be the first layer for now.
+pub struct SkyLayer<S: Sky> {
     buffer: TriangleBuffer<Vec2>,
     /// The shader/texture.
     pub skybox: S,
     shader: Shader,
 }
 
-/// Skybox texture/shader.
-pub trait Skybox {
+/// A sky [`Layer`] that samples a cubemap texture. Must be the first layer for now.
+pub type SkyboxLayer = SkyLayer<CubeMapSky>;
+
+impl SkyboxLayer {
+    /// Creates a sky that samples a cubemap texture.
+    pub fn with_cube_map(renderer: &Renderer, cube_map: Texture) -> Self {
+        Self::new(renderer, CubeMapSky::new(cube_map))
+    }
+}
+
+/// Sky texture/shader.
+pub trait Sky {
     /// The associated shader.
     fn shader(renderer: &Renderer) -> Shader;
     /// Add uniforms for rendering.
@@ -26,11 +36,11 @@ pub trait Skybox {
 }
 
 /// A cube map for texturing a skybox.
-pub struct CubeMapSkybox {
+pub struct CubeMapSky {
     cube_map: Texture,
 }
 
-impl Skybox for CubeMapSkybox {
+impl Sky for CubeMapSky {
     fn shader(renderer: &Renderer) -> Shader {
         include_shader!(renderer, "cubemap_skybox")
     }
@@ -40,7 +50,7 @@ impl Skybox for CubeMapSkybox {
     }
 }
 
-impl CubeMapSkybox {
+impl CubeMapSky {
     /// Creates a new [`CubeMapSkybox`] from a `cube_map` ([`Texture::typ`] == [`TextureType::Cube`]).
     pub fn new(cube_map: Texture) -> Self {
         assert_eq!(
@@ -65,7 +75,7 @@ impl CubeMapSkybox {
 /// http://blenderartists.org/forum/showthread.php?245954-preethams-sky-impementation-HDR
 ///
 /// Three.js integration by zz85 http://twitter.com/blurspline
-pub struct ShaderSkybox {
+pub struct ShaderSky {
     /// Overall aerosol content.
     ///
     /// 2 - clear (arctic)
@@ -85,7 +95,7 @@ pub struct ShaderSkybox {
     pub exposure: f32,
 }
 
-impl Default for ShaderSkybox {
+impl Default for ShaderSky {
     fn default() -> Self {
         Self {
             turbidity: 2.0,
@@ -98,7 +108,7 @@ impl Default for ShaderSkybox {
     }
 }
 
-impl Skybox for ShaderSkybox {
+impl Sky for ShaderSky {
     fn shader(renderer: &Renderer) -> Shader {
         include_shader!(renderer, "shader_skybox")
     }
@@ -113,7 +123,7 @@ impl Skybox for ShaderSkybox {
     }
 }
 
-impl<S: Skybox> SkyboxLayer<S> {
+impl<S: Sky> SkyLayer<S> {
     /// Creates a new [`SkyboxLayer`].
     pub fn new(renderer: &Renderer, skybox: S) -> Self {
         // Create a buffer that has 1 triangle covering the whole screen.
@@ -132,9 +142,9 @@ impl<S: Skybox> SkyboxLayer<S> {
     }
 }
 
-impl<S: Skybox> Layer for SkyboxLayer<S> {}
+impl<S: Sky> Layer for SkyLayer<S> {}
 
-impl<S: Skybox> RenderLayer<&Camera3d> for SkyboxLayer<S> {
+impl<S: Sky> RenderLayer<&Camera3d> for SkyLayer<S> {
     fn render(&mut self, renderer: &Renderer, params: &Camera3d) {
         if let Some(shader) = self.shader.bind(renderer) {
             renderer.invert_depth_equal(false); // Skybox depth is 1.0 and cleared depth is 1.0 so <= is required.

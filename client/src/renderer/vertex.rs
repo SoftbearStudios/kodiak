@@ -50,6 +50,9 @@ int!(i32, 1, i32s);
 int!([i32; 2], 2, i32s);
 int!([i32; 3], 3, i32s);
 int!([i32; 4], 4, i32s);
+int!(IVec2, 2, i32s);
+int!(IVec3, 3, i32s);
+int!(IVec4, 4, i32s);
 int!([u8; 4], 4, u8s);
 int!([u16; 2], 2, u16s);
 int!([u16; 4], 4, u16s);
@@ -57,6 +60,9 @@ int!(u32, 1, u32s);
 int!([u32; 2], 2, u32s);
 int!([u32; 3], 3, u32s);
 int!([u32; 4], 4, u32s);
+int!(UVec2, 2, u32s);
+int!(UVec3, 3, u32s);
+int!(UVec4, 4, u32s);
 
 /// Vec4 but with 8 bits per component instead of 32. Capable of representing [-1, 1].
 #[derive(Copy, Clone, Debug, Default, Pod, Zeroable)]
@@ -74,6 +80,13 @@ impl From<Vec4> for SmolVec4 {
     fn from(v: Vec4) -> Self {
         let v = v * 127.0;
         Self([v.x as i8, v.y as i8, v.z as i8, v.w as i8])
+    }
+}
+
+impl From<[i8; 3]> for SmolVec4 {
+    #[inline]
+    fn from(v: [i8; 3]) -> Self {
+        Self([v[0], v[1], v[2], 0])
     }
 }
 

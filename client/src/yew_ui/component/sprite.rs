@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::sprite_sheet::SpriteSheet;
+use std::borrow::Cow;
 use stylist::yew::styled_component;
 use web_sys::MouseEvent;
 use yew::virtual_dom::AttrValue;
@@ -17,6 +18,8 @@ pub struct SpriteProps {
     pub onclick: Option<Callback<MouseEvent>>,
     #[prop_or(None)]
     pub style: Option<AttrValue>,
+    #[prop_or(None)]
+    pub tint: Option<AttrValue>,
     #[prop_or_default]
     pub class: Classes,
 }
@@ -54,12 +57,15 @@ pub fn sprite(props: &SpriteProps) -> Html {
                 class={props.class.clone()}
                 onclick={props.onclick.clone()}
                 style={format!(
-                    "background-image: url(\"{}\"); background-position: -{}px -{}px; background-clip: content-box; width: {}px; height: {}px;{}",
+                    "background-image: url(\"{}\"); background-position: -{}px -{}px; background-clip: content-box; width: {}px; height: {}px;{}{}",
                     props.sheet.image_src,
                     sprite.x,
                     sprite.y,
                     sprite.width,
                     sprite.height,
+                    props.tint.as_ref()
+                        .map(|t| Cow::Owned(format!("mask-image: url(\"{}\"); background-color: {t}; background-blend-mode: multiply;", props.sheet.image_src)))
+                        .unwrap_or(Cow::Borrowed("")),
                     props.style.as_ref().map(|a| a.as_str()).unwrap_or("")
                 )}
             />
