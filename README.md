@@ -1,5 +1,7 @@
 # Kodiak
 
+[![Build](https://github.com/SoftbearStudios/kodiak/actions/workflows/build.yml/badge.svg)](https://github.com/SoftbearStudios/kodiak/actions/workflows/build.yml) 
+
 Kodiak is a custom game engine; we use it in all of our games.
 
 ## Key features
