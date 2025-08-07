@@ -187,3 +187,18 @@ pub struct MemberId {
     pub team_id: TeamId,
     pub player_id: PlayerId,
 }
+
+#[cfg(feature = "server")]
+pub fn random_bot_team_name() -> TeamName {
+    static BOT_TEAMS: std::sync::LazyLock<Vec<TeamName>> = std::sync::LazyLock::new(|| {
+        include_str!("./bot_teams.txt")
+            .split('\n')
+            .filter(|s| !s.is_empty() && s.len() <= 6)
+            .map(TeamName::new_unsanitized)
+            .collect()
+    });
+
+    let names = &BOT_TEAMS;
+    use rand::prelude::SliceRandom;
+    *names.choose(&mut rand::thread_rng()).unwrap()
+}

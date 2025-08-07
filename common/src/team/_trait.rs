@@ -1,6 +1,9 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+use rand::seq::IteratorRandom;
+use rand::Rng;
+
 use super::{Manifestation, Member, MemberId, PlayerStatus, Team};
 use crate::{
     JoinUpdate, JoinedStatus, PlayerAlias, PlayerId, TeamId, TeamName, TeamRequest, TeamUpdate,
@@ -116,6 +119,33 @@ pub trait PlayerTeamModel {
         self.update_player(player_id, JoinUpdate::Quit);
         for join in joins {
             self.update_team(join, TeamUpdate::RemoveJoiner(player_id));
+        }
+    }
+
+    /// Random, possibly-invalid team request.
+    #[cfg(feature = "server")]
+    fn random_team_request(
+        &self,
+        rng: &mut impl Rng,
+        random_team_name: fn() -> TeamName,
+    ) -> TeamRequest {
+        let random_player_id = self
+            .player_ids()
+            .chain(std::iter::once(PlayerId(rng.gen())))
+            .choose(rng)
+            .unwrap();
+        let random_team_id = self
+            .team_ids()
+            .chain(std::iter::once(TeamId(rng.gen())))
+            .choose(rng)
+            .unwrap();
+        match rng.gen_range(0..61) {
+            0..=19 => TeamRequest::Accept(random_player_id),
+            20..=29 => TeamRequest::Join(random_team_id),
+            30..=39 => TeamRequest::Kick(random_player_id),
+            40..=49 => TeamRequest::Name(random_team_name()),
+            50..=59 => TeamRequest::Reject(random_player_id),
+            _ => TeamRequest::Leave,
         }
     }
 

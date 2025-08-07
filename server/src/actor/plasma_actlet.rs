@@ -20,6 +20,7 @@ use actix::{Actor, ActorFutureExt, AsyncContext, Handler, Recipient, WrapFuture}
 use axum_server::tls_rustls::RustlsConfig;
 use bytes::Bytes;
 use kodiak_common::rand::{thread_rng, Rng};
+use kodiak_common::FileLoadedResult;
 use log::{error, info, warn};
 use serde_json::Value;
 use std::collections::hash_map::Entry;
@@ -461,6 +462,52 @@ impl<G: ArenaService> Handler<PlasmaUpdate> for ServerActor<G> {
             match update {
                 PlasmaUpdateV1::Heartbeat {} => {
                     self.plasma.last_acknowledged_heartbeat = Some(Instant::now());
+                }
+                PlasmaUpdateV1::FileLoaded {
+                    file_namespace,
+                    file_path,
+                    visitor_id,
+                    arena_id,
+                    player_id,
+                    result,
+                } => {
+                    if let Some(scene) = self.realms.get_mut(arena_id)
+                        && let Some(player) = scene.arena.arena_context.players.get_mut(player_id)
+                        && let Some(client) = player.client()
+                        && client.session.visitor_id == visitor_id
+                    {
+                        scene.arena.arena_service.file_loaded(
+                            player_id,
+                            player,
+                            file_namespace,
+                            file_path,
+                            match result {
+                                FileLoadedResult::Loaded { content_data, .. } => Ok(content_data),
+                                FileLoadedResult::NotFound => Err("not found".to_owned()),
+                                FileLoadedResult::Forbidden => Err("forbidden".to_owned()),
+                                FileLoadedResult::TypeMismatch => Err("type mismatch".to_owned()),
+                                FileLoadedResult::Error(e) => Err(e),
+                            },
+                        );
+                    }
+                }
+                PlasmaUpdateV1::FileSaved {
+                    file_path,
+                    visitor_id,
+                    arena_id,
+                    player_id,
+                    error,
+                } => {
+                    if let Some(scene) = self.realms.get_mut(arena_id)
+                        && let Some(player) = scene.arena.arena_context.players.get_mut(player_id)
+                        && let Some(client) = player.client()
+                        && client.session.visitor_id == Some(visitor_id)
+                    {
+                        scene
+                            .arena
+                            .arena_service
+                            .file_saved(player_id, player, file_path, error);
+                    }
                 }
                 PlasmaUpdateV1::Claims { claims } => {
                     for dto in Vec::from(claims) {

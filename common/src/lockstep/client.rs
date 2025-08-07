@@ -1,35 +1,51 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-use super::disposition::LockstepDispositionInner;
+use super::phase::LockstepPhaseInner;
 use super::{
     Lockstep, LockstepInputId, LockstepInputQueue, LockstepInputWindow, LockstepRequest,
     LockstepTick, LockstepUpdate, LockstepWorld,
 };
-use crate::lockstep::disposition::LockstepDisposition;
+use crate::lockstep::phase::LockstepPhase;
 use crate::{ArenaMap, PlayerId};
 use heapless::HistoryBuffer;
 
+/// Implements lockstep model on game client.
 pub struct LockstepClient<W: LockstepWorld>
 where
     [(); W::MAX_PREDICTION]:,
     [(); W::LAG_COMPENSATION]:,
     [(); W::TPS]:,
 {
+    /// A past server state (current server state unknown due to latency).
     pub real: Lockstep<W>,
+    /// The `player_id` of the player on this game client.  It is
     /// `None` before initial complete received, otherwise `Some`.
     pub player_id: Option<PlayerId>,
+    /// Inputs from this client after `real` up to and including `predicted`.
+    /// There is one input per tick.
     pub input_queue: LockstepInputQueue<W>,
+    /// Prediction of what `real` will be after `input_queue.len()` server
+    /// ticks are applied.
     pub predicted: Lockstep<W>,
+    /// Same as `predicted` but with one more server tick.
     pub predicted_next: Lockstep<W>,
+    /// A linear interpolation between `predicted` and `predicted_next`
+    /// based on fractional ticks that have elapsed.
     pub interpolated: Lockstep<W>,
+    /// Helps client decide which events to discard when too many are buffered.
     pub heard_from_server: bool,
     /// Fractional ticks since last predicted tick.
     pub since_predicted_tick: f32,
+    /// For interpolation of players in fast paced games.
     pub smoothed_normalized_ticks_since_real: f32,
+    /// If server has buffered too many inputs then throttle sending.
     pub server_buffered_inputs: usize,
+    /// Diagnostic.
     pub ping_latencies: HistoryBuffer<u32, { W::TPS }>,
+    /// Diagnostic.
     pub total_latencies: HistoryBuffer<u32, { W::TPS }>,
+    /// A buffer of `Info` (e.g. sound) events that game hasn't yet consumed.
     pub(crate) info: Vec<W::Info>,
 }
 
@@ -98,7 +114,7 @@ where
     }
 
     /// Advances the real world by one `tick` from the server. Also corrects any miss predictions
-    /// we made with [`Self::tick_predicted`].
+    /// we made with [`Self::tick_predicted`]. Called by `receive`
     ///
     /// Uses a `checksum` to catch desyncs due to non-deterministic code.
     ///
@@ -136,8 +152,8 @@ where
         // Lockstep.
         self.real.tick(
             tick,
-            &LockstepDisposition {
-                inner: LockstepDispositionInner::GroundTruth,
+            &LockstepPhase {
+                inner: LockstepPhaseInner::GroundTruth,
             },
             &mut |info| {
                 if let Some(player_id) = self.player_id
@@ -169,9 +185,8 @@ where
             self.predicted = old_predicted.lerp(
                 &self.predicted,
                 (W::TICK_PERIOD_SECS * 2.0).min(1.0),
-                &LockstepDisposition {
-                    inner:
-                        LockstepDispositionInner::LerpingOldCurrentPredictionToNewCurrentPrediction,
+                &LockstepPhase {
+                    inner: LockstepPhaseInner::LerpingOldCurrentPredictionToNewCurrentPrediction,
                 },
             );
         }
@@ -204,8 +219,8 @@ where
         self.interpolated = self.predicted.lerp(
             &self.predicted_next,
             self.since_predicted_tick,
-            &LockstepDisposition {
-                inner: LockstepDispositionInner::LerpingCurrentPredictionToNextPrediction {
+            &LockstepPhase {
+                inner: LockstepPhaseInner::LerpingCurrentPredictionToNextPrediction {
                     perspective: self.player_id,
                     smoothed_normalized_ticks_since_real: self.smoothed_normalized_ticks_since_real,
                 },
@@ -213,6 +228,8 @@ where
         );
     }
 
+    /// Called every frame by game to process inputs, interpolate world state,
+    /// and get `Info` events.
     pub fn update<'a>(
         &'a mut self,
         elapsed_seconds: f32,
@@ -410,8 +427,8 @@ where
                 inputs,
                 ..Default::default()
             },
-            &LockstepDisposition {
-                inner: LockstepDispositionInner::Predicting {
+            &LockstepPhase {
+                inner: LockstepPhaseInner::Predicting {
                     perspective: player_id,
                     additional_interpolation_prediction: interpolation_prediction,
                 },

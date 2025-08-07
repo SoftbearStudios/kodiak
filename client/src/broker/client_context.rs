@@ -608,7 +608,9 @@ impl<G: GameClient> ClientContext<G> {
             self.set_escaping(if in_game {
                 Escaping::InGame
             } else {
-                Escaping::Escaping
+                Escaping::Escaping {
+                    awaiting_pointer_lock: true,
+                }
             });
         }
         if !in_game && !self.client.escaping.is_spawning() {
@@ -631,10 +633,10 @@ impl<G: GameClient> ClientContext<G> {
             self.mouse.reset();
         }
 
-        if escaping != self.client.escaping {
+        if escaping.message() != self.client.escaping.message() {
             escaping.post_message();
         } else {
-            js_hooks::console_log!("repeated escaping {escaping:?}");
+            js_hooks::console_log!("repeated escaping {}", escaping.message());
         }
         self.client.escaping = escaping;
     }

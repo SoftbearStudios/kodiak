@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-use super::{ChatRecipient, ClaimUpdateDto, RealmHeartbeat, ServerLogDto};
+use super::{ChatRecipient, ClaimUpdateDto, FileNamespace, RealmHeartbeat, ServerLogDto};
 use crate::{
     is_default, ArenaId, ArenaToken, ChatId, ClientHash, EngineMetrics, GameId,
     LeaderboardScoreDto, MetricFilter, NonZeroUnixMillis, PlayerAlias, PlayerId, QuestSampleDto,
@@ -84,6 +84,24 @@ pub enum PlasmaRequestV1 {
         #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
         realms: BTreeMap<RealmId, RealmHeartbeat>,
     },
+    /// Load binary data from a file for `visitor_id`.
+    LoadFile {
+        /// Where to find the file.
+        file_namespace: FileNamespace,
+        /// Path of the file that was uploaded to plasma.
+        file_path: String,
+        /// Only send the file if it has this content type. If `None`, allow any content type.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        accept_content_type: Option<String>,
+        /// Visitor ID of the player that is downloading the data, or `None` if their
+        /// authentication failed. For permission checking and echoing in the response.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        visitor_id: Option<VisitorId>,
+        /// Echo in response.
+        arena_id: ArenaId,
+        /// Echo in response.
+        player_id: PlayerId,
+    },
     /// Moderates a specific chat message. The immediate consequence may depend
     /// upon whether `user_id` is an authorized moderator because, generally,
     /// the more severe consequences require authorization. The minimum consequence
@@ -154,7 +172,7 @@ pub enum PlasmaRequestV1 {
         /// For renewing team. This is constant for the duration team is reserved.
         team_token: Option<TeamToken>,
     },
-    /// Save binary data for `visitor_id`.
+    /// Save binary data for `visitor_id` as a shared file with no teaser.
     SaveFile {
         /// Content (data) of the file that is uploaded to plasma.
         content_data: Vec<u8>,
@@ -164,6 +182,10 @@ pub enum PlasmaRequestV1 {
         file_path: String,
         /// Visitor ID of the player that is uploading the data.
         visitor_id: VisitorId,
+        /// Echo in response.
+        arena_id: ArenaId,
+        /// Echo in response.
+        player_id: PlayerId,
     },
     /// Send chat message for distribution to other servers.
     SendChat {

@@ -5,9 +5,9 @@ use super::keyboard::KeyboardEventsListener;
 use super::{
     logout, post_message, process_finish_signin, renew_session, Accounts, BannerAd, Canvas, Ctw,
     ErrorTracer, EscapeMenu, Escaping, FatalErrorDialog, Features, FeedbackDialog, Gctw,
-    GlobalEventListener, InterstitialAd, InvitationLinks, LicensingDialog, Login, OutboundLinks,
-    PrivacyDialog, ProfileDialog, RanksDialog, Reconnecting, RewardedAd, SettingsDialog,
-    StoreDialog, TermsDialog,
+    GlobalEventListener, InterstitialAd, InvitationLinks, LicensingDialog, OutboundLinks,
+    PrivacyDialog, ProfileDialog, RanksDialog, Reconnecting, RewardedAd, SetLogin, SetLoginAlias,
+    SettingsDialog, StoreDialog, TermsDialog,
 };
 use crate::js_hooks::console_log;
 use crate::net::{SocketUpdate, SystemInfo};
@@ -160,10 +160,7 @@ enum AppMsg<G: GameClient> {
     ChangeCommonSettings(Box<dyn FnOnce(&mut CommonSettings, &mut BrowserStorages)>),
     ChangeSettings(Box<dyn FnOnce(&mut G::GameSettings, &mut BrowserStorages)>),
     FrontendCreated(Option<SystemInfo>),
-    Login {
-        login: Login,
-        set_alias: bool,
-    },
+    Login(SetLogin),
     /// Signals the canvas should be recreated, followed by the renderer.
     RecreateCanvas,
     /// Put back the canvas.
@@ -235,9 +232,12 @@ impl<G: GameClient> Component for App<G> {
         let settings = G::GameSettings::load(&browser_storages, G::GameSettings::default());
 
         renew_session(
-            ctx.link().callback(|login| AppMsg::Login {
-                login,
-                set_alias: false,
+            ctx.link().callback(|login| {
+                AppMsg::Login(SetLogin {
+                    login,
+                    alias: SetLoginAlias::NoEffect,
+                    quit: false,
+                })
             }),
             common_settings.session_id,
             G::GAME_CONSTANTS.game_id(),
@@ -451,12 +451,12 @@ impl<G: GameClient> Component for App<G> {
                     &mut self.client_broker,
                     change,
                 );
-                // Just in case.
+                // We con't know if the settings affect the UI, so conservatively assume they do.
                 ret = true;
             }
             AppMsg::ChangeSettings(change) => {
                 change_settings(&mut self.client_broker, change);
-                // Just in case.
+                // We don't know if the settings affect the UI, so conservatively assume they do.
                 ret = true;
             }
             AppMsg::FrontendCreated(system_info) => {
@@ -509,7 +509,11 @@ impl<G: GameClient> Component for App<G> {
                         }
                     }
             }
-            AppMsg::Login { login, set_alias } => {
+            AppMsg::Login(SetLogin {
+                login,
+                alias: set_alias,
+                quit,
+            }) => {
                 if let Some(context) = self.client_broker.as_context_mut() {
                     context
                         .common_settings
@@ -529,18 +533,44 @@ impl<G: GameClient> Component for App<G> {
                     context.send_to_server(CommonRequest::Client(ClientRequest::Login(
                         login.session_token,
                     )));
+                    if quit {
+                        context.send_to_server(CommonRequest::Client(ClientRequest::Quit));
+                    }
 
                     fn compute_alias(
                         user_name: Option<&String>,
                         nick_name: Option<&String>,
                     ) -> Option<PlayerAlias> {
                         nick_name
-                            .or(user_name)
-                            .map(|n| (PlayerAlias::new_unsanitized(n.as_str()), n))
-                            .filter(|(p, n)| p.as_str() == n.as_str())
+                            .map(|n| n.as_str())
+                            .or(user_name.map(|u| {
+                                if u.len() > PlayerAlias::capacity() {
+                                    // Truncate less important parts. Could help CrazyGames random names and emails:
+                                    // - HappyCat.6nOb -> HappyCat
+                                    // - RoboticBroccoli.UTF4 -> RoboticBrocc
+                                    // - finntbear@gmail.com -> finntbear
+                                    let delimiters: &[char] = if u.contains('@') {
+                                        &['@']
+                                    } else {
+                                        &['.', '_', '-', '@']
+                                    };
+                                    u.rsplit_once(delimiters)
+                                        .map(|(b, _)| {
+                                            &b[0..b.floor_char_boundary(PlayerAlias::capacity())]
+                                        })
+                                        .unwrap_or(u.as_str())
+                                } else {
+                                    u.as_str()
+                                }
+                            }))
+                            .map(|n| (PlayerAlias::new_unsanitized(n), n))
+                            .filter(|(p, n)| p.as_str() == *n)
                             .map(|(a, _)| a)
                     }
-                    if !set_alias {
+                    if matches!(set_alias, SetLoginAlias::NoEffect)
+                        || (context.common_settings.alias.is_some()
+                            && matches!(set_alias, SetLoginAlias::OverwriteGuestName))
+                    {
                         // No-op.
                     } else if let Some(alias) =
                         compute_alias(login.user_name.as_ref(), login.nick_name.as_ref())
@@ -893,6 +923,18 @@ impl<G: GameClient> Component for App<G> {
                         }
                         ret = true;
                     }
+                    // Snippet can send this after it learns of a created invitation ID.
+                    Some("defaultPlayWithFriendsOnPublicServer") => {
+                        if let Some(context) = self.client_broker.as_context_mut() {
+                            let created_invitation_id = context.state.core.created_invitation_id;
+                            if let Some(created_invitation_id) = created_invitation_id
+                                && context.state.core.accepted_invitation_id.is_none() {
+                                // We could maintain this state on the client, but informing the server
+                                // is better for metrics/quests.
+                                context.send_request(CommonRequest::Invitation(InvitationRequest::Accept(Some(created_invitation_id))));
+                            }
+                        }
+                    }
                     Some(s) if s.starts_with("enableSignInWith=") => {
                         let string = s.split_once('=').unwrap().1;
                         self.features.outbound.accounts = Accounts::Snippet {
@@ -1056,6 +1098,16 @@ impl<G: GameClient> Component for App<G> {
                             ret = true;
                         }
                     }
+                    Some("awaitPointerLock") => {
+                        if let Some(context) = self.client_broker.as_context_mut()
+                            && !context.client.escaping.is_spawning()
+                        {
+                            context.set_escaping(Escaping::Escaping {
+                                awaiting_pointer_lock: true,
+                            });
+                            ret = true;
+                        }
+                    }
                     Some("closeProfile") => {
                         self.context_menu = None;
                         ret = true;
@@ -1067,9 +1119,12 @@ impl<G: GameClient> Component for App<G> {
                         {
                             // No-op to prevent creating two visitors.
                         } else {
-                            let set_login = ctx.link().callback(|login| AppMsg::Login {
-                                login,
-                                set_alias: true,
+                            let set_login = ctx.link().callback(|login| {
+                                AppMsg::Login(SetLogin {
+                                    login,
+                                    alias: SetLoginAlias::Overwrite,
+                                    quit: false,
+                                })
                             });
                             logout(set_login, G::GAME_CONSTANTS.game_id());
                             ret = true;
@@ -1078,9 +1133,12 @@ impl<G: GameClient> Component for App<G> {
                     Some("nickNameChanged") => {
                         if let Some(common_settings) = common_settings(&self.client_broker) {
                             renew_session(
-                                ctx.link().callback(|login| AppMsg::Login {
-                                    login,
-                                    set_alias: true,
+                                ctx.link().callback(|login| {
+                                    AppMsg::Login(SetLogin {
+                                        login,
+                                        alias: SetLoginAlias::Overwrite,
+                                        quit: false,
+                                    })
                                 }),
                                 common_settings.session_id,
                                 G::GAME_CONSTANTS.game_id(),
@@ -1092,10 +1150,7 @@ impl<G: GameClient> Component for App<G> {
                             &message,
                             G::GAME_CONSTANTS,
                             &self.features.outbound.accounts,
-                            &ctx.link().callback(|login| AppMsg::Login {
-                                login,
-                                set_alias: true,
-                            }),
+                            &ctx.link().callback(AppMsg::Login),
                         );
                     }
                 }

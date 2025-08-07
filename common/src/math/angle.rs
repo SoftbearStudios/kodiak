@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::bitcode::{self, *};
-use glam::{Mat2, Mat3, Mat4, Quat, Vec2, Vec3, Vec3Swizzles};
+use glam::{IVec2, Mat2, Mat3, Mat4, Quat, Vec2, Vec3, Vec3Swizzles};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::f32::consts::PI;
 use std::fmt;
 use std::ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign};
+use strum::EnumIter;
 
 pub type AngleRepr = i16;
 
@@ -22,6 +23,7 @@ impl Angle {
     pub const PI: Self = Self(AngleRepr::MAX);
     // TODO this is actually 1/65536 less than PI
     pub const PI_2: Self = Self(AngleRepr::MAX / 2);
+    pub const PI_4: Self = Self(AngleRepr::MAX / 4);
     pub const ZERO: Self = Self(0);
 
     pub fn new() -> Self {
@@ -193,12 +195,48 @@ impl Angle {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Encode, Decode)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Encode, Decode, EnumIter)]
 pub enum Cardinal4 {
     North,
     East,
     South,
     West,
+}
+
+impl Cardinal4 {
+    pub fn to_vec(self) -> IVec2 {
+        match self {
+            Self::North => IVec2::Y,
+            Self::East => IVec2::X,
+            Self::South => IVec2::NEG_Y,
+            Self::West => IVec2::NEG_X,
+        }
+    }
+
+    /// Rotate 90 degrees clockwise.
+    pub fn clockwise(self) -> Self {
+        match self {
+            Self::North => Self::East,
+            Self::East => Self::South,
+            Self::South => Self::West,
+            Self::West => Self::North,
+        }
+    }
+
+    /// Rotate 90 degrees counter-clockwise.
+    pub fn counter_clockwise(self) -> Self {
+        match self {
+            Self::North => Self::West,
+            Self::East => Self::North,
+            Self::South => Self::East,
+            Self::West => Self::South,
+        }
+    }
+
+    /// Returns the corresponding angle.
+    pub fn angle(self) -> Angle {
+        self.into()
+    }
 }
 
 impl From<Cardinal4> for Angle {

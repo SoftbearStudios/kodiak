@@ -44,8 +44,8 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 // Export `pub` symbols below. Remaining symbols are effectively `pub(crate)`.
 pub use entry_point::entry_point;
 pub use service::{
-    random_bot_name, random_bot_team_name, random_emoji_bot_name, ArenaContext, ArenaService, Bot,
-    BotAction, BotOptions, Player, RedirectedPlayer, Score, ShardPerRealm, ShardPerTier,
+    random_bot_name, random_emoji_bot_name, ArenaContext, ArenaService, Bot, BotAction, BotOptions,
+    Player, RedirectedPlayer, Score, ShardPerRealm, ShardPerTier,
 };
 pub use util::{base64_decode, base64_encode, diff_large_n, diff_small_n};
 

@@ -616,6 +616,10 @@ fn parse_attributes(vertex_source: &str) -> impl Iterator<Item = (&str, u32)> {
 fn compile_shader(gl: &Gl, shader_type: u32, source: &str) -> WebGlShader {
     let shader = gl.create_shader(shader_type).unwrap();
     gl.shader_source(&shader, source);
+    // Anti-tamper.
+    if gl.get_shader_source(&shader).unwrap() != source {
+        panic!("cheating detected");
+    }
     gl.compile_shader(&shader);
     shader
 }

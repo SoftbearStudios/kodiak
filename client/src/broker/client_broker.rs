@@ -235,7 +235,9 @@ impl<G: GameClient> ClientBroker<G> {
                                 if self.context.client.escaping.is_in_game() {
                                     // Escape can't be used to toggle pointer lock since
                                     // browsers consider that a security risk.
-                                    self.context.set_escaping(Escaping::Escaping);
+                                    self.context.set_escaping(Escaping::Escaping {
+                                        awaiting_pointer_lock: false,
+                                    });
                                 }
                             }
                             Key::Tab if G::TAB_TO_ESCAPE => {
@@ -538,7 +540,10 @@ impl<G: GameClient> ClientBroker<G> {
                 .set_escaping(if self.context.mouse.pointer_locked {
                     Escaping::InGame
                 } else {
-                    Escaping::Escaping
+                    // Most likely pressed escape key.
+                    Escaping::Escaping {
+                        awaiting_pointer_lock: false,
+                    }
                 });
         }
     }

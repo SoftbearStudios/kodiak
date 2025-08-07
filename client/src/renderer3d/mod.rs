@@ -23,6 +23,7 @@ mod skybox;
 #[cfg(feature = "renderer3d_model")]
 mod svg;
 mod text;
+mod tracer;
 mod wire;
 
 // Re-export to provide a simpler api.
@@ -37,4 +38,5 @@ pub use shadow::*;
 pub use shadow_volume::*;
 pub use skybox::*;
 pub use text::*;
+pub use tracer::*;
 pub use wire::*;

@@ -12,7 +12,9 @@ pub struct LockstepPlayer<W: LockstepWorld>
 where
     [(); W::LAG_COMPENSATION]:,
 {
+    /// Game specific input queued elsewhere but cached here to render player.
     pub input: W::Input,
+    /// Game specific player state as of the tick that `input` was created.
     pub inner: W::Player,
 }
 

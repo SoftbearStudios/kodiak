@@ -1,7 +1,10 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-use super::{ChatRecipient, ClaimUpdateDto, DomainDto, ServerRole, ServerUseTopology, Snippet};
+use super::{
+    ChatRecipient, ClaimUpdateDto, DomainDto, FileLoadedResult, FileNamespace, ServerRole,
+    ServerUseTopology, Snippet,
+};
 use crate::{
     is_default, ArenaId, ArenaToken, ChatId, ChatMessage, LeaderboardScoreDto, NickName, PeriodId,
     PlayerAlias, PlayerId, RealmId, Referrer, ServerId, SessionToken, TeamName, TeamToken,
@@ -70,6 +73,39 @@ pub enum PlasmaUpdateV1 {
     },
     Domains {
         domains: Box<[DomainDto]>,
+    },
+    /// Loaded binary data for `visitor_id`.
+    FileLoaded {
+        /// Namespace of the file that was loaded from plasma.
+        file_namespace: FileNamespace,
+        /// Path of the file that is was loaded from plasma.
+        file_path: String,
+        /// `arena_id` to share the result with.
+        arena_id: ArenaId,
+        /// `player_id` to share the result with.
+        player_id: PlayerId,
+        /// Visitor ID of the player that loaded the data, if successfully logged in.
+        ///
+        /// Typically used by plasma to check read permissions and, subsequently, by the
+        /// game server to make sure the player ID didn't change to a different person
+        /// while the request was being processed.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        visitor_id: Option<VisitorId>,
+        result: FileLoadedResult,
+    },
+    /// Saved binary data for `visitor_id`.
+    FileSaved {
+        /// Path of the file that was uploaded to plasma.
+        file_path: String,
+        /// Visitor ID of the player that uploaded the data.
+        visitor_id: VisitorId,
+        /// Echo from request.
+        arena_id: ArenaId,
+        /// Echo from request.
+        player_id: PlayerId,
+        /// `None` if success.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        error: Option<String>,
     },
     /// Acknowledges a received heartbeat so the server knows it got through.
     //

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-use super::disposition::{LockstepDisposition, LockstepDispositionInner};
+use super::phase::{LockstepPhase, LockstepPhaseInner};
 use super::{
     Lockstep, LockstepClientData, LockstepInput, LockstepRequest, LockstepTick, LockstepUpdate,
     LockstepWorld,
@@ -12,11 +12,14 @@ use std::collections::BTreeMap;
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Deref;
 
+/// Implements lockstep model on the game server.
 pub struct LockstepServer<W: LockstepWorld>
 where
     [(); W::LAG_COMPENSATION]:,
 {
+    /// Most recent server state, i.e. the authoritative state.
     pub real: Lockstep<W>,
+    /// Pending inputs not yet applied to `real`
     pub current: LockstepTick<W>,
 }
 
@@ -251,8 +254,8 @@ where
     pub fn post_update(&mut self, on_info: &mut dyn FnMut(W::Info)) {
         self.real.tick(
             std::mem::take(&mut self.current),
-            &LockstepDisposition {
-                inner: LockstepDispositionInner::GroundTruth,
+            &LockstepPhase {
+                inner: LockstepPhaseInner::GroundTruth,
             },
             on_info,
         );

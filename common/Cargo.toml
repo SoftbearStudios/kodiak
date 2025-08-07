@@ -3,7 +3,7 @@ authors = ["Softbear, Inc."]
 edition = "2021"
 license = "LGPL-3.0-or-later"
 name = "kodiak_common"
-version = "0.1.3"
+version = "0.2.0"
 workspace = ".."
 
 [features]
@@ -29,11 +29,12 @@ glam = { version = "0.22", features = ["debug-glam-assert", "rand", "scalar-math
 heapless = "0.8.0"
 kodiak_macros = { path = "../macros" }
 log = {version = "0.4.17", optional = true}
-lz4_flex = { version = "0.11.2", default-features = false, features = ["frame"], optional = true }
+lz4_flex = { version = "=0.11.2", default-features = false, features = ["frame"], optional = true }
 paste = "1.0.12"
 plasma_protocol = { path = "../plasma_protocol" }
 rand = { version = "0.8.5", default-features = false }
 serde = "1.0"
+strum = { version = "0.24", features = ["derive"] }
 zstd = { version = "0.13.0", features = ["experimental"], optional = true }
 
 [dev-dependencies]

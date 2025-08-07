@@ -16,6 +16,7 @@ use crate::{
 };
 use actix::Recipient;
 use kodiak_common::rand::random;
+use kodiak_common::{FileNamespace, VisitorId};
 use log::info;
 use std::net::IpAddr;
 use std::time::{Duration, Instant};
@@ -341,7 +342,7 @@ impl<G: ArenaService> ArenaContext<G> {
 
     /// Sends `message` to server at `server_id`. The message may or may not arrive but we won't find out.
     pub fn send_server_message(
-        &mut self,
+        &self,
         server_id: ServerId,
         arena_id: ArenaId,
         message: serde_json::Value,
@@ -355,6 +356,53 @@ impl<G: ArenaService> ArenaContext<G> {
                     message,
                 })
                 .unwrap(),
+            }));
+    }
+
+    /// Start saving a file (result will be asynchronously passed to the arena service).
+    pub fn save_file(
+        &self,
+        player_id: PlayerId,
+        visitor_id: VisitorId,
+        path: String,
+        content_data: Vec<u8>,
+        content_type: Option<String>,
+    ) {
+        self.send_to_plasma
+            .send(PlasmaRequest::V1(PlasmaRequestV1::SaveFile {
+                content_data,
+                content_type,
+                file_path: path,
+                arena_id: self.topology.local_arena_id,
+                player_id,
+                visitor_id,
+            }));
+    }
+
+    /// Start loading a file (loaded file will be asynchronously passed to the arena service).
+    pub fn load_file(
+        &self,
+        player_id: PlayerId,
+        namespace: FileNamespace,
+        path: String,
+        accept_content_type: Option<String>,
+    ) {
+        let visitor_id = self
+            .players
+            .get(player_id)
+            .unwrap()
+            .client()
+            .unwrap()
+            .session
+            .visitor_id;
+        self.send_to_plasma
+            .send(PlasmaRequest::V1(PlasmaRequestV1::LoadFile {
+                file_namespace: namespace,
+                file_path: path,
+                visitor_id,
+                arena_id: self.topology.local_arena_id,
+                player_id,
+                accept_content_type,
             }));
     }
 

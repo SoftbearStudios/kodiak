@@ -425,13 +425,28 @@ impl Texture {
     /// Creates a new empty 3D [`Texture`] with the given `format` and `linear_filter`. Mipmaps and repeating
     /// cannot be used.
     #[cfg(feature = "renderer_webgl2")]
-    pub fn new_empty_3d(renderer: &Renderer, format: TextureFormat, linear_filter: bool, dimension3: u32) -> Self {
-        Self::new_empty_inner(renderer, format, linear_filter, Some(dimension3.try_into().expect("dimension3 too large")))
+    pub fn new_empty_3d(
+        renderer: &Renderer,
+        format: TextureFormat,
+        linear_filter: bool,
+        dimension3: u32,
+    ) -> Self {
+        Self::new_empty_inner(
+            renderer,
+            format,
+            linear_filter,
+            Some(dimension3.try_into().expect("dimension3 too large")),
+        )
     }
 
     /// Creates a new empty [`Texture`] with the given `format` and `linear_filter`. Mipmaps and repeating
     /// cannot be used.
-    fn new_empty_inner(renderer: &Renderer, format: TextureFormat, linear_filter: bool, dimension3: Option<u16>) -> Self {
+    fn new_empty_inner(
+        renderer: &Renderer,
+        format: TextureFormat,
+        linear_filter: bool,
+        dimension3: Option<u16>,
+    ) -> Self {
         let gl = &renderer.gl;
         let typ = if let Some(_dimension3) = dimension3 {
             #[cfg(not(feature = "renderer_webgl2"))]
@@ -540,7 +555,8 @@ impl Texture {
                     src_format,
                     src_type,
                     bytes,
-                ).unwrap();
+                )
+                .unwrap();
             } else {
                 gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_opt_u8_array(
                     target,
@@ -575,8 +591,9 @@ impl Texture {
                     border,
                     src_format,
                     src_type,
-                    bytes
-                ).unwrap();
+                    bytes,
+                )
+                .unwrap();
             } else {
                 gl.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
                     target,

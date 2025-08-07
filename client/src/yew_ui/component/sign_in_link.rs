@@ -24,7 +24,7 @@ use yew::{
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Login {
+pub(crate) struct Login {
     pub session_id: SessionId,
     pub session_token: SessionToken,
     #[serde(default)]
@@ -39,20 +39,41 @@ pub struct Login {
     pub settings: HashMap<String, String>,
 }
 
+pub(crate) struct SetLogin {
+    pub(crate) login: Login,
+    /// Overwrite the current alias based on login. Typically `true` when login was
+    /// initiated by player, and `false` if login was an automatic renewal.
+    pub(crate) alias: SetLoginAlias,
+    /// Quit to menu after login.
+    pub(crate) quit: bool,
+}
+
+pub(crate) enum SetLoginAlias {
+    /// Overwrite the current alias based on the login. Typically used for manual logins.
+    Overwrite,
+    /// Overwrite the current alias based on the login if it is a guest name. Typically used
+    /// for snippet-based automatic login renewals.
+    OverwriteGuestName,
+    /// Don't change the current alias. Typically used for native automatic login renewals.
+    NoEffect,
+}
+
 #[derive(PartialEq, Properties)]
 pub struct SignInLinkProps {
     #[prop_or(false)]
     pub hide_login: bool,
 }
 
-pub fn process_finish_signin(
+pub(crate) fn process_finish_signin(
     data: &JsValue,
     game_constants: &GameConstants,
     accounts: &Accounts,
-    set_login: &Callback<Login>,
+    set_login: &Callback<SetLogin>,
 ) {
     let url;
     let body;
+    let alias;
+    let quit;
     if data.is_object() {
         let pmcsrf = js_sys::Reflect::get(&data, &JsValue::from_str("pmcsrf"))
             .ok()
@@ -74,9 +95,14 @@ pub fn process_finish_signin(
         body.append_with_str("pmcsrf", &pmcsrf.to_string()).unwrap();
         body.append_with_str("sessionId", &session_id.to_string())
             .unwrap();
+        alias = SetLoginAlias::Overwrite;
+        quit = false;
     } else if let Accounts::Snippet { provider, .. } = &accounts
         && let Some(string) = data.as_string()
-        && string.starts_with("signedInWith=")
+        && let siw = string.starts_with("signedInWith=")
+        && let asiw = string.starts_with("autoSignedInWith=")
+        && let qsiw = string.starts_with("quitSignedInWith=")
+        && (siw || asiw || qsiw)
     {
         let token_provider = provider.to_ascii_lowercase();
         let token = string.split_once('=').unwrap().1;
@@ -87,6 +113,12 @@ pub fn process_finish_signin(
             .unwrap();
         body.append_with_str("provider", &token_provider).unwrap();
         body.append_with_str("token", &token).unwrap();
+        alias = if siw {
+            SetLoginAlias::Overwrite
+        } else {
+            SetLoginAlias::OverwriteGuestName
+        };
+        quit = qsiw;
     } else {
         return;
     };
@@ -116,7 +148,11 @@ pub fn process_finish_signin(
                 .as_string()
                 .ok_or(String::from("JSON not string"))?;
             let decoded: Login = serde_json::from_str(&json).map_err(|e| e.to_string())?;
-            set_login.emit(decoded);
+            set_login.emit(SetLogin {
+                login: decoded,
+                alias,
+                quit,
+            });
         }
 
         Ok(JsValue::NULL)
@@ -271,7 +307,7 @@ fn use_profile(user_id: Option<UserId>) -> UseStateHandle<Option<Profile>> {
     profile
 }
 
-pub fn logout(set_login: Callback<Login>, game_id: GameId) {
+pub(crate) fn logout(set_login: Callback<Login>, game_id: GameId) {
     renew_session(set_login, None, game_id);
 }
 
@@ -310,7 +346,7 @@ pub fn profile_factory(
 }
 
 #[allow(clippy::type_complexity)]
-pub fn renew_session(set_login: Callback<Login>, renew: Option<SessionId>, game_id: GameId) {
+pub(crate) fn renew_session(set_login: Callback<Login>, renew: Option<SessionId>, game_id: GameId) {
     let url = format!(
         "https://softbear.com/api/auth/session.json?sessionId={}&gameId={game_id}",
         renew

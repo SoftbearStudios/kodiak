@@ -261,6 +261,9 @@ impl Default for CommonSettings {
 fn random_guest() -> PlayerAlias {
     let options = [
         "AcidGuest",
+        "Auguest",
+        "Auguestine",
+        "Auguestus",
         "BestGuest",
         "BestGuestern",
         "BirdsGuest",
@@ -278,6 +281,7 @@ fn random_guest() -> PlayerAlias {
         "GuestChoice",
         "GuestControl",
         "GuestrnUnion",
+        "Guester",
         "GuestEver",
         "GuestHouse",
         "Guesticulate",
@@ -299,6 +303,7 @@ fn random_guest() -> PlayerAlias {
         "Lifeguest",
         "LimeGuest",
         "Maniguest",
+        "Maniguesto",
         "MetaGuest",
         "Proguest",
         "SafetyGuest",
@@ -307,6 +312,16 @@ fn random_guest() -> PlayerAlias {
         "TakeAGuest",
         "TheGuest",
         "WildGuest",
+        "GuestStop",
+        "Guestaurant",
+        "Guestroom",
+        "GuestBuy",
+        "Guestilence",
+        "Guesto",
+        "Guestibule",
+        "Guestigial",
+        "Guestion",
+        "Guestlaw",
     ];
     PlayerAlias::new_unsanitized(options.choose(&mut thread_rng()).unwrap())
 }

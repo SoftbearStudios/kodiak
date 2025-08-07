@@ -59,21 +59,31 @@ impl Default for Features {
 #[derive(Copy, Clone, PartialEq, Eq, Default, Debug)]
 pub enum Escaping {
     /// In game, possibly pointer lock.
-    #[default]
     InGame,
     /// Escape menu, possibly loss of pointer lock.
-    Escaping,
+    Escaping {
+        /// User didn't want to escape, but they still need to click to
+        /// enter pointer lock.
+        ///
+        /// If not(cfg(feature = "pointer_lock")), should always be `false`.
+        awaiting_pointer_lock: bool,
+    },
     /// Spawn dialog open.
+    #[default]
     Spawning,
 }
 
 impl Escaping {
-    pub fn post_message(self) {
-        post_message(match self {
+    pub fn message(self) -> &'static str {
+        match self {
             Self::InGame => "inGame",
-            Self::Escaping => "escaping",
+            Self::Escaping { .. } => "escaping",
             Self::Spawning => "spawning",
-        });
+        }
+    }
+
+    pub fn post_message(self) {
+        post_message(self.message());
     }
 
     pub fn is_in_game(self) -> bool {
@@ -81,7 +91,20 @@ impl Escaping {
     }
 
     pub fn is_escaping(self) -> bool {
-        matches!(self, Self::Escaping)
+        matches!(self, Self::Escaping { .. })
+    }
+
+    /// User didn't want to escape, but they still need to click to
+    /// enter pointer lock.
+    ///
+    /// If not(cfg(feature = "pointer_lock")), should always be `false`.
+    pub fn is_escaping_awaiting_pointer_lock(self) -> bool {
+        matches!(
+            self,
+            Self::Escaping {
+                awaiting_pointer_lock: true
+            }
+        )
     }
 
     pub fn is_spawning(self) -> bool {
@@ -90,8 +113,15 @@ impl Escaping {
 
     pub fn toggle(self) -> Option<Self> {
         Some(match self {
-            Self::InGame => Self::Escaping,
-            Self::Escaping => Self::InGame,
+            Self::InGame
+            | Self::Escaping {
+                awaiting_pointer_lock: true,
+            } => Self::Escaping {
+                awaiting_pointer_lock: false,
+            },
+            Self::Escaping {
+                awaiting_pointer_lock: false,
+            } => Self::InGame,
             _ => return None,
         })
     }

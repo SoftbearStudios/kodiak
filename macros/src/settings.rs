@@ -300,7 +300,7 @@ pub(crate) fn derive_settings(input: TokenStream) -> TokenStream {
 
                     fn display(
                         &self,
-                        t: &Translator,
+                        t: &settings_prerequisites::Translator,
                         mut checkbox: impl FnMut(
                             SettingCategory,
                             String,

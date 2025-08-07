@@ -31,8 +31,7 @@ mod browser;
 mod fps;
 mod game_client;
 mod io;
-// TODO: consider rolling up symbols.
-pub mod js_hooks;
+mod js_hooks;
 mod net;
 #[cfg(any(feature = "renderer", feature = "renderer2d", feature = "renderer3d"))]
 pub mod renderer;
@@ -50,6 +49,7 @@ pub use self::browser::*;
 pub use self::fps::*;
 pub use self::game_client::GameClient;
 pub use self::io::*;
+pub use self::js_hooks::*;
 pub use self::net::{deep_connect, js_fetch, js_response_text};
 pub use self::translation::*;
 pub use self::yew_ui::*;
@@ -57,6 +57,7 @@ pub use sprite_sheet::*;
 
 // Export symbols used by settings macros.
 pub mod settings_prerequisites {
+    pub use super::translation::Translator;
     pub use super::LocalSettings;
     pub use kodiak_common::translate;
 }

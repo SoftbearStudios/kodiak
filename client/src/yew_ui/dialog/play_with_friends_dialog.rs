@@ -211,6 +211,8 @@ pub fn play_with_friends_dialog<G: GameClient>() -> Html {
             let navigator = navigator.clone();
             let created_invitation_id = core_state.created_invitation_id;
             created_invitation_id.map(|created_invitation_id| {
+                // We could maintain this state on the client, but informing the server
+                // is better for metrics/quests.
                 invitation_request_callback.reform(move |_event: MouseEvent| {
                     navigator.push(&AnyRoute::new("/"));
                     InvitationRequest::Accept(Some(created_invitation_id))
@@ -307,7 +309,10 @@ pub fn play_with_friends_dialog<G: GameClient>() -> Html {
                 if *choice == Choice::CreateInvitation {
                     <div class={indented_block_style.clone()}>
                         <span class={vertical_align_style.clone()}>{translate!(t, "Invite code")}{":"}</span>
-                        <span class={span_invite_code_style.clone()}>{core_state.created_invitation_id.filter(|_| *choice == Choice::CreateInvitation && ctw.setting_cache.arena_id.realm_id().map(|r| r.is_public_default()).unwrap_or(true)).map(|i| i.to_string()).unwrap_or_default()}</span>
+                        <span
+                            class={span_invite_code_style.clone()}
+                            title={translate!(t, "Invite players to this server without them joining an existing team")}
+                        >{core_state.created_invitation_id.filter(|_| *choice == Choice::CreateInvitation && ctw.setting_cache.arena_id.realm_id().map(|r| r.is_public_default()).unwrap_or(true)).map(|i| i.to_string()).unwrap_or_default()}</span>
                         <button
                             disabled={*choice != Choice::CreateInvitation}
                             onclick={onclick_copy_invite.clone()}

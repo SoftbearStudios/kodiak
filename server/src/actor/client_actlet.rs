@@ -26,7 +26,7 @@ use crate::{
 use actix::{AsyncContext, Context as ActorContext, Handler, Message};
 use bytes::Bytes;
 use kodiak_common::rand::random;
-use kodiak_common::{DomainName, NavigationMetricsDto};
+use kodiak_common::{ChatMessage, DomainName, MessageDto, NavigationMetricsDto, PlayerAlias};
 use log::{error, info, warn};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -1437,6 +1437,26 @@ impl<G: ArenaService> PlayerClientData<G> {
         })
     }
 
+    /// Deliver a chat message from the 'Server' to the client.
+    pub fn send_authority_chat(&mut self, message: String) {
+        self.chat.receive(
+            &Arc::new(MessageDto {
+                alias: PlayerAlias::authority(),
+                visitor_id: None,
+                team_name: None,
+                authentic: true,
+                authority: true,
+                whisper: false,
+                message: ChatMessage::Raw {
+                    message,
+                    detected_language_id: LanguageId::default(),
+                    english_translation: None,
+                },
+            }),
+            None,
+        );
+    }
+
     pub fn region_id(&self) -> Option<RegionId> {
         self.metrics.region_id
     }
@@ -1451,6 +1471,10 @@ impl<G: ArenaService> PlayerClientData<G> {
 
     pub fn moderator(&self) -> bool {
         self.session.moderator
+    }
+
+    pub fn visitor_id(&self) -> Option<VisitorId> {
+        self.session.visitor_id
     }
 }
 

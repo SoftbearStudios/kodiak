@@ -22,6 +22,14 @@ where
         player_id: PlayerId,
     ) -> (Self, Option<&'a mut LockstepPlayer<W>>) {
         let slots = players.raw_slots();
+        if player_id.to_index() >= slots.len() {
+            return (
+                Self {
+                    slices: [slots, &mut []],
+                },
+                None,
+            );
+        }
         let (first, gap_second) = slots.split_at_mut(player_id.to_index());
         let (gap, second) = gap_second.split_at_mut(1);
         let player = gap[0].as_mut();

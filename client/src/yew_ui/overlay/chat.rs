@@ -40,7 +40,7 @@ pub fn chat_overlay(props: &ChatProps) -> Html {
             user-select: text !important;
             pointer-events: initial !important;
             display: block !important;
-            line-height: initial !important;
+            line-height: 1.0 !important;
             margin-bottom: 0.25rem !important;
         }
         "#
@@ -62,6 +62,7 @@ pub fn chat_overlay(props: &ChatProps) -> Html {
         user-select: text;
         text-align: left;
         pointer-events: auto;
+        line-height: 1.0;
 
         @keyframes fadeOut {
             0% {
@@ -69,7 +70,7 @@ pub fn chat_overlay(props: &ChatProps) -> Html {
             }
             99% {
                 opacity: 0;
-                line-height: initial;
+                line-height: 1.0;
                 margin-bottom: 0.25rem;
                 pointer-events: initial;
                 user-select: text;

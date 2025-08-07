@@ -12,6 +12,14 @@ use yew::{html, Html};
 // Replace: translate!($1, "$3")
 
 impl Translator {
+    pub fn mouse_controls(&self) -> String {
+        translate!(self, "Mouse Controls")
+    }
+
+    pub fn keyboard_controls(&self) -> String {
+        translate!(self, "Keyboard Controls")
+    }
+
     pub fn watch_ad_to_unlock(&self) -> String {
         translate!(self, "Watch ad to unlock.")
     }

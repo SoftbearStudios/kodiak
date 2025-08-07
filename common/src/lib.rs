@@ -8,6 +8,7 @@
 #![feature(get_many_mut)]
 #![feature(impl_trait_in_assoc_type)]
 #![feature(int_roundings)]
+#![feature(lazy_cell)]
 #![feature(is_sorted)]
 #![feature(let_chains)]
 #![feature(never_type)]
@@ -64,4 +65,4 @@ pub use kodiak_macros::*;
 pub use plasma_protocol::*;
 
 // Re-export commonly-used third party crates.
-pub use {arrayvec, fastapprox, fxhash, glam, heapless, rand};
+pub use {arrayvec, fastapprox, fxhash, glam, heapless, rand, serde};

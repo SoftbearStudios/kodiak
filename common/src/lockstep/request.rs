@@ -5,6 +5,7 @@ use super::{LockstepInput, LockstepInputWindow, LockstepWorld};
 use crate::bitcode::{self, *};
 use std::fmt::{self, Debug, Formatter};
 
+/// Message sent from game client to lockstep model on game server.
 #[derive(Clone, Encode, Decode)]
 pub struct LockstepRequest<W: LockstepWorld>
 where

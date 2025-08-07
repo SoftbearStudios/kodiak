@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::service::{ArenaService, Bot, BotAction, Player, PlayerInner, PlayerRepo};
-use crate::{ArenaSettingsDto, EngineArenaSettings, PlayerAlias, PlayerId, TeamName};
+use crate::{ArenaSettingsDto, EngineArenaSettings, PlayerAlias, PlayerId};
 use kodiak_common::rand::prelude::IteratorRandom;
 use kodiak_common::rand::seq::SliceRandom;
 use kodiak_common::rand::thread_rng;
@@ -30,19 +30,6 @@ pub fn random_emoji_bot_name() -> PlayerAlias {
 
 pub fn random_bot_name() -> PlayerAlias {
     let names = &BOT_NAMES;
-    *names.choose(&mut thread_rng()).unwrap()
-}
-
-pub fn random_bot_team_name() -> TeamName {
-    static BOT_TEAMS: LazyLock<Vec<TeamName>> = LazyLock::new(|| {
-        include_str!("./bot_teams.txt")
-            .split('\n')
-            .filter(|s| !s.is_empty() && s.len() <= 6)
-            .map(TeamName::new_unsanitized)
-            .collect()
-    });
-
-    let names = &BOT_TEAMS;
     *names.choose(&mut thread_rng()).unwrap()
 }
 

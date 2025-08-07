@@ -1,13 +1,14 @@
 use plasma_protocol::PlayerId;
 
 /// Alters the game logic based on whether predicting/interpolating.
-// TODO: convert parts of this to an enum.
-pub struct LockstepDisposition {
-    pub(crate) inner: LockstepDispositionInner,
+pub struct LockstepPhase {
+    pub(crate) inner: LockstepPhaseInner,
 }
 
-pub(crate) enum LockstepDispositionInner {
+pub(crate) enum LockstepPhaseInner {
+    /// Applying authoritative tick from server.
     GroundTruth,
+    /// Client making prediction based on local inputs but without server ticks.
     Predicting {
         perspective: Option<PlayerId>,
         additional_interpolation_prediction: bool,
@@ -20,18 +21,17 @@ pub(crate) enum LockstepDispositionInner {
     LerpingOldCurrentPredictionToNewCurrentPrediction,
 }
 
-impl LockstepDisposition {
+impl LockstepPhase {
     /// Is currently making an uncertain predicition.
     pub fn is_predicting(&self) -> bool {
-        matches!(self.inner, LockstepDispositionInner::Predicting { .. })
+        matches!(self.inner, LockstepPhaseInner::Predicting { .. })
     }
 
     /// Currently making an uncertain prediction from a player's persepctive.
     pub fn predicting(&self) -> Option<PlayerId> {
-        if let LockstepDispositionInner::Predicting { perspective, .. }
-        | LockstepDispositionInner::LerpingCurrentPredictionToNextPrediction {
-            perspective,
-            ..
+        if let LockstepPhaseInner::Predicting { perspective, .. }
+        | LockstepPhaseInner::LerpingCurrentPredictionToNextPrediction {
+            perspective, ..
         } = &self.inner
         {
             *perspective
@@ -43,10 +43,10 @@ impl LockstepDisposition {
     pub fn interpolation_prediction(&self) -> bool {
         matches!(
             self.inner,
-            LockstepDispositionInner::Predicting {
+            LockstepPhaseInner::Predicting {
                 additional_interpolation_prediction: true,
                 ..
-            } | LockstepDispositionInner::LerpingCurrentPredictionToNextPrediction { .. }
+            } | LockstepPhaseInner::LerpingCurrentPredictionToNextPrediction { .. }
         )
     }
 
@@ -54,7 +54,7 @@ impl LockstepDisposition {
     /// centered on zero. If other players' movements are not predicted, this can help smooth them.
     /// Only present during lerping between current prediction and next prediction.
     pub fn smoothed_normalized_ticks_since_real(&self) -> Option<f32> {
-        if let LockstepDispositionInner::LerpingCurrentPredictionToNextPrediction {
+        if let LockstepPhaseInner::LerpingCurrentPredictionToNextPrediction {
             smoothed_normalized_ticks_since_real,
             ..
         } = &self.inner

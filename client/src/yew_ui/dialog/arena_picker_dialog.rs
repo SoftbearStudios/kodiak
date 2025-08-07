@@ -109,8 +109,8 @@ pub fn arena_picker_dialog<MID: Default + Debug + Copy + Ord + 'static>(
         @media (min-width: 600px) {
             div#dialog_content {
                 min-width: 20rem;
-                min-width: 20rem;
-                max-width: 30rem;
+                min-height: 20rem;
+                max-width: 40rem;
                 max-height: 30rem;
             }
         }
@@ -261,6 +261,9 @@ pub fn arena_picker_dialog<MID: Default + Debug + Copy + Ord + 'static>(
             title={t.find_game_title()}
         >
             <div id="choice_panel">
+                if core_state.accepted_invitation_id.is_some() {
+                    {translate!(t, "Warning: Selecting a different game will cancel playing with friends.")}
+                }
                 <h3>
                     {"1. "}
                     {translate!(t, "Select region")}

@@ -9,6 +9,7 @@ use crate::{
     ArenaId, ArenaSettingsDto, GameConstants, NoGameArenaSettings, PlayerAlias, PlayerId, ServerId,
     TeamId, TeamName,
 };
+use kodiak_common::FileNamespace;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
@@ -51,11 +52,6 @@ pub trait ArenaService: 'static + Unpin + Sized + Send + Sync {
 
     /// Creates a service with the default `Tier` if applicable.
     fn new(context: &mut ArenaContext<Self>) -> Self;
-
-    /// Get alias of authority figure (that, for example, sends chat moderation warnings).
-    fn authority_alias() -> PlayerAlias {
-        PlayerAlias::new_unsanitized("Server")
-    }
 
     /// Returns true iff the player is considered to be "alive":
     /// - on leaderboard
@@ -136,6 +132,31 @@ pub trait ArenaService: 'static + Unpin + Sized + Send + Sync {
         let _ = (server_id, arena_id, message, context);
     }
 
+    /// Plasma asynchronously reported on the saving of a file. Error is `None`
+    /// if successful.
+    fn file_saved(
+        &mut self,
+        player_id: PlayerId,
+        player: &mut Player<Self>,
+        path: String,
+        error: Option<String>,
+    ) {
+        // No-op;
+        let _ = (player_id, player, path, error);
+    }
+
+    fn file_loaded(
+        &mut self,
+        player_id: PlayerId,
+        player: &mut Player<Self>,
+        namespace: FileNamespace,
+        path: String,
+        result: Result<Vec<u8>, String>,
+    ) {
+        // No-op;
+        let _ = (player_id, player, namespace, path, result);
+    }
+
     /// Gets a client a.k.a. real player's [`GameUpdate`].
     ///
     /// May return one update to be send reliably and/or use
@@ -149,6 +170,7 @@ pub trait ArenaService: 'static + Unpin + Sized + Send + Sync {
 
     /// Before sending.
     fn tick(&mut self, context: &mut ArenaContext<Self>);
+
     /// After sending.
     fn post_update(&mut self, context: &mut ArenaContext<Self>) {
         let _ = context;

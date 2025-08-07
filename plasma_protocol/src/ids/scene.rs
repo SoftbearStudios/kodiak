@@ -46,6 +46,16 @@ impl SceneId {
             tier_number,
         }
     }
+
+    pub fn map_index<MID>(self) -> u8 {
+        if let Some(tier_number) = self.tier_number {
+            // Allow testing map.
+            tier_number.0.get() % std::mem::variant_count::<MID>() as u8
+        } else {
+            // Scale.
+            self.instance_number.0 % std::mem::variant_count::<MID>() as u8
+        }
+    }
 }
 
 mod scene_id_serde {

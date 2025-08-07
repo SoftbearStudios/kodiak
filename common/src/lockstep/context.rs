@@ -1,13 +1,14 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-use super::disposition::LockstepDisposition;
+use super::phase::LockstepPhase;
 use super::{LockstepPlayer, LockstepWorld};
 use crate::bitcode::{self, *};
 use crate::{ArenaMap, PlayerId};
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{Hash, Hasher};
 
+/// The context is the part of the world defined by the lockstep model.
 #[derive(Clone, Encode, Decode)]
 pub struct LockstepContext<W: LockstepWorld>
 where
@@ -62,7 +63,7 @@ where
     /// t must be [0,1].
     ///
     /// Resulting set of player ids will match `next`.
-    pub(crate) fn lerp(&self, next: &Self, t: f32, disposition: &LockstepDisposition) -> Self {
+    pub(crate) fn lerp(&self, next: &Self, t: f32, phase: &LockstepPhase) -> Self {
         let mut players = next.players.clone();
         for (player_id, next) in players.iter_mut() {
             /*
@@ -73,7 +74,7 @@ where
             }
             */
             if let Some(prev) = self.players.get(player_id) {
-                let lerped = W::lerp_player(player_id, prev, &*next, t, disposition);
+                let lerped = W::lerp_player(player_id, prev, &*next, t, phase);
                 next.inner = lerped;
             }
         }

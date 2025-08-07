@@ -17,4 +17,6 @@ pub use self::color::{InvalidTeamColor, TeamColor};
 pub use self::id_or_alias::PlayerIdOrAlias;
 pub use self::joined_status::{JoinUpdate, JoinedStatus, PlayerStatus};
 pub use self::members::Members;
+#[cfg(feature = "server")]
+pub use self::team::random_bot_team_name;
 pub use self::team::{allocate_team_id, Manifestation, Member, MemberId, Team};

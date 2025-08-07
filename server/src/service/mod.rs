@@ -20,9 +20,10 @@ mod topology;
 
 pub use self::arena_context::{ArenaContext, RedirectedPlayer, SendPlasmaRequest};
 pub use self::arena_service::{ArenaService, Bot, BotAction};
+#[cfg(feature = "server")]
+pub use self::bot_repo::random_bot_team_name;
 pub use self::bot_repo::{
-    random_bot_name, random_bot_team_name, random_emoji_bot_name, BotOptions, BotRepo,
-    PlayerBotData,
+    random_bot_name, random_emoji_bot_name, BotOptions, BotRepo, PlayerBotData,
 };
 pub use self::chat_inbox::ChatInbox;
 pub use self::chat_repo::{ChatRepo, ClientChatData, MessageAttribution};

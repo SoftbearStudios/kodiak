@@ -3,7 +3,7 @@
 
 use crate::{
     impl_wrapper_str, is_default, ArenaId, ClaimSubset, CohortId, DomainName, GameId, LanguageDto,
-    LanguageId, NonZeroUnixMillis, PlayerId, Referrer, RegionId, ServerId, ServerNumber,
+    LanguageId, NickName, NonZeroUnixMillis, PlayerId, Referrer, RegionId, ServerId, ServerNumber,
     ServerToken, UserAgentId, UserId, VisitorId,
 };
 use arrayvec::ArrayString;
@@ -41,6 +41,25 @@ pub struct DomainDto {
     pub domain: DomainName,
     pub certificate: Box<str>,
     pub private_key: Box<str>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub enum FileLoadedResult {
+    Loaded {
+        content_data: Vec<u8>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        content_type: Option<String>,
+    },
+    Forbidden,
+    NotFound,
+    TypeMismatch,
+    Error(String),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub enum FileNamespace {
+    NickName(NickName),
+    RequestVisitorId,
 }
 
 /// Mirrors log::Level.

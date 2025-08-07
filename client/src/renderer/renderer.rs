@@ -268,8 +268,8 @@ impl Renderer {
             "depth": {depth},
             "stencil": {stencil},
             "antialias": {builtin_aa},
-            "power_preference": "high-performance",
-            "preserve_drawing_buffer": false
+            "powerPreference": "high-performance",
+            "preserveDrawingBuffer": false
         }}"##
         ))
         .unwrap();

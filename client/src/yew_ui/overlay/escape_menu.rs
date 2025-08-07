@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 use crate::{
-    use_client_request_callback, use_ctw, use_translator, ClientRequest, Escaping, Flex,
-    GameClient, Position, Positioner,
+    translate, use_client_request_callback, use_ctw, use_translator, ClientRequest, Curtain,
+    Escaping, Flex, GameClient, Position, Positioner,
 };
 use stylist::yew::styled_component;
 use web_sys::MouseEvent;
 use yew::{html, Callback, Html};
+use yew_icons::{Icon, IconId};
 use yew_router::prelude::use_navigator;
 use yew_router::AnyRoute;
 
@@ -82,28 +83,51 @@ pub(crate) fn escape_menu<G: GameClient>() -> Html {
         })
     };
 
+    #[cfg(feature = "pointer_lock")]
+    let icon_id: fn() -> IconId = || IconId::LucideMousePointerClick;
+    #[cfg(not(feature = "pointer_lock"))]
+    let icon_id: fn() -> IconId = || unreachable!();
+
     html! {
-        <Positioner
-            id="escape_menu"
-            position={Position::Center}
-            flex={Flex::Column}
-        >
-            <button
-                class={button_style.clone()}
-                onclick={onclick_back}
-            >{t.resume_hint()}</button>
-            <button
-                class={button_style.clone()}
-                onclick={onclick_route_factory("/help/")}
-            >{t.help_hint()}</button>
-            <button
-                class={button_style.clone()}
-                onclick={onclick_route_factory("/settings/")}
-            >{t.settings_title()}</button>
-            <button
-                class={button_style}
-                onclick={onclick_leave}
-            >{t.quit_hint()}</button>
-        </Positioner>
+        if ctw.escaping.is_escaping_awaiting_pointer_lock() {
+            <Curtain onclick={onclick_back}>
+                <Positioner
+                    id="escape_menu"
+                    position={Position::Center}
+                    flex={Flex::Column}
+                >
+                    <Icon
+                        icon_id={icon_id()}
+                        width={"3rem"}
+                        height={"3rem"}
+                        style={"margin: auto;"}
+                    />
+                    <h2 style={"margin: 0.5rem;"}>{translate!(t, "Click anywhere to enter game")}</h2>
+                </Positioner>
+            </Curtain>
+        } else {
+            <Positioner
+                id="escape_menu"
+                position={Position::Center}
+                flex={Flex::Column}
+            >
+                <button
+                    class={button_style.clone()}
+                    onclick={onclick_back}
+                >{t.resume_hint()}</button>
+                <button
+                    class={button_style.clone()}
+                    onclick={onclick_route_factory("/help/")}
+                >{t.help_hint()}</button>
+                <button
+                    class={button_style.clone()}
+                    onclick={onclick_route_factory("/settings/")}
+                >{t.settings_title()}</button>
+                <button
+                    class={button_style}
+                    onclick={onclick_leave}
+                >{t.quit_hint()}</button>
+            </Positioner>
+        }
     }
 }

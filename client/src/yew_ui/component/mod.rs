@@ -57,10 +57,10 @@ pub use route_icon::{RouteIcon, RouteIconProps};
 pub use route_link::{use_navigation, RouteLink, RouteLinkProps};
 pub use section::{Section, SectionArrow, SectionProps};
 pub use settings_icon::{SettingsIcon, SettingsIconProps};
-pub use sign_in_link::{
-    logout, process_finish_signin, profile_factory, renew_session, Login, SignInLink,
-    SignInLinkProps,
+pub(crate) use sign_in_link::{
+    logout, process_finish_signin, renew_session, SetLogin, SetLoginAlias,
 };
+pub use sign_in_link::{profile_factory, SignInLink, SignInLinkProps};
 pub use softbear_button::SoftbearButton;
 pub use spinner::Spinner;
 pub use sprite::{Sprite, SpriteProps, SpriteSheetDetails};

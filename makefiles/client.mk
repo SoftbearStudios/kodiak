@@ -14,7 +14,8 @@ clean: remove_phrases
 	cargo clean
 
 debug:
-	trunk build index.dev.html
+	trunk build $(TRUNK_OPTS) index.dev.html
+	mv dist/index.dev.html dist/index.html
 
 features:
 	clear

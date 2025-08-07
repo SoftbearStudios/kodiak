@@ -273,6 +273,10 @@ pub fn team_overlay<
     let my_player_id = use_core_state().player_id;
     let i_am_team_captain = my_player_id == props.team.leader().map(|l| l.player_id); // TODO
     let team_full = props.team.members.len() > M::MAX_MEMBERS;
+    #[cfg(feature = "pointer_lock")]
+    let hide_buttons = ctw.pointer_locked;
+    #[cfg(not(feature = "pointer_lock"))]
+    let hide_buttons = false;
 
     html! {
         <Positioner
@@ -299,34 +303,36 @@ pub fn team_overlay<
                                     name_css_class.clone(),
                                     team_captain.then(|| owner_css_class.clone()))
                                 }>{alias.as_str()}</td>
-                                // for spacing only.
-                                <td><button
-                                    class={classes!(button_css_class.clone(), hidden_css_class.clone())}
-                                >{CHECK_MARK}</button></td>
-                                <td><button
-                                    class={classes!(
-                                        button_css_class.clone(),
-                                        (
-                                            (!me && !i_am_team_captain)
-                                            || (me && !M::MEMBERS_CAN_LEAVE)
-                                            || (team_captain && !M::LEADER_CAN_LEAVE)
-                                            || (props.team.members.len() == 1 && !M::CAN_LEAVE_SOLO_TEAM)
-                                        ).then(|| hidden_css_class.clone()))
-                                    }
-                                    onclick={move |event: MouseEvent| {
-                                        event.stop_propagation();
-                                        if me {
-                                            on_leave_team();
-                                        } else {
-                                            on_kick_from_team(player_id);
+                                if !hide_buttons {
+                                    // for spacing only.
+                                    <td><button
+                                        class={classes!(button_css_class.clone(), hidden_css_class.clone())}
+                                    >{CHECK_MARK}</button></td>
+                                    <td><button
+                                        class={classes!(
+                                            button_css_class.clone(),
+                                            (
+                                                (!me && !i_am_team_captain)
+                                                || (me && !M::MEMBERS_CAN_LEAVE)
+                                                || (team_captain && !M::LEADER_CAN_LEAVE)
+                                                || (props.team.members.len() == 1 && !M::CAN_LEAVE_SOLO_TEAM)
+                                            ).then(|| hidden_css_class.clone()))
                                         }
-                                    }}
-                                    title={if me {
-                                        t.team_leave_hint()
-                                    } else {
-                                        t.team_kick_hint()
-                                    }}
-                                >{X_MARK}</button></td>
+                                        onclick={move |event: MouseEvent| {
+                                            event.stop_propagation();
+                                            if me {
+                                                on_leave_team();
+                                            } else {
+                                                on_kick_from_team(player_id);
+                                            }
+                                        }}
+                                        title={if me {
+                                            t.team_leave_hint()
+                                        } else {
+                                            t.team_kick_hint()
+                                        }}
+                                    >{X_MARK}</button></td>
+                                }
                             </tr>
                         }
                     }).collect::<Html>()}
@@ -337,28 +343,30 @@ pub fn team_overlay<
                             html_nested!{
                                 <tr class={tr_css_class.clone()}>
                                     <td class={classes!(name_css_class.clone(), name_pending_css_class.clone())}>{alias.as_str()}</td>
-                                    <td><button
-                                        class={classes!(button_css_class.clone(), team_full.then(|| disabled_css_class.clone()))}
-                                        onclick={move |event: MouseEvent| {
-                                            event.stop_propagation();
-                                            on_accept_join_team(player_id);
-                                        }}
-                                        title={t.team_accept_hint()}
-                                    >{CHECK_MARK}</button></td>
-                                    <td><button
-                                        class={button_css_class.clone()}
-                                        onclick={move |event: MouseEvent| {
-                                            event.stop_propagation();
-                                            on_reject_join_team(player_id);
-                                        }}
-                                        title={t.team_deny_hint()}
-                                    >{X_MARK}</button></td>
+                                    if !hide_buttons {
+                                        <td><button
+                                            class={classes!(button_css_class.clone(), team_full.then(|| disabled_css_class.clone()))}
+                                            onclick={move |event: MouseEvent| {
+                                                event.stop_propagation();
+                                                on_accept_join_team(player_id);
+                                            }}
+                                            title={t.team_accept_hint()}
+                                        >{CHECK_MARK}</button></td>
+                                        <td><button
+                                            class={button_css_class.clone()}
+                                            onclick={move |event: MouseEvent| {
+                                                event.stop_propagation();
+                                                on_reject_join_team(player_id);
+                                            }}
+                                            title={t.team_deny_hint()}
+                                        >{X_MARK}</button></td>
+                                    }
                                 </tr>
                             }
                         }).collect::<Html>()}
                     }
                 </table>
-            } else {
+            } else if !hide_buttons {
                 <form onsubmit={move |e: SubmitEvent| {
                     e.prevent_default();
                     e.stop_propagation();

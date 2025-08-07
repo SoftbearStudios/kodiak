@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Softbear, Inc.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-use super::disposition::LockstepDisposition;
+use super::phase::LockstepPhase;
 use super::{LockstepContext, LockstepPlayer, LockstepTick};
 use crate::bitcode::{self, *};
 use crate::{ArenaEntry, CompatHasher, PlayerId};
@@ -90,7 +90,7 @@ pub trait LockstepWorld: Hash + Debug + Clone + Sized {
         &mut self,
         _tick: Self::Tick,
         context: &mut LockstepContext<Self>,
-        disposition: &LockstepDisposition,
+        phase: &LockstepPhase,
         on_info: &mut dyn FnMut(Self::Info),
     ) where
         [(); Self::LAG_COMPENSATION]:;
@@ -106,7 +106,7 @@ pub trait LockstepWorld: Hash + Debug + Clone + Sized {
     }
 
     /// t is (0, 1)
-    fn lerp(&self, next: &Self, _t: f32, _disposition: &LockstepDisposition) -> Self {
+    fn lerp(&self, next: &Self, _t: f32, _phase: &LockstepPhase) -> Self {
         next.clone()
     }
 
@@ -116,7 +116,7 @@ pub trait LockstepWorld: Hash + Debug + Clone + Sized {
         _player: &Self::Player,
         next: &Self::Player,
         _t: f32,
-        _disposition: &LockstepDisposition,
+        _phase: &LockstepPhase,
     ) -> Self::Player {
         next.clone()
     }
@@ -152,7 +152,7 @@ where
     pub(crate) fn tick(
         &mut self,
         tick: LockstepTick<W>,
-        disposition: &LockstepDisposition,
+        phase: &LockstepPhase,
         on_info: &mut dyn FnMut(W::Info),
     ) {
         self.context.tick_id = self.context.tick_id.wrapping_add(1);
@@ -176,20 +176,19 @@ where
         for (player_id, input) in tick.inputs {
             if let Some(player) = self.context.players.get_mut(player_id) {
                 player.input = input;
-            } else if disposition.predicting().is_none() && !disposition.interpolation_prediction()
-            {
+            } else if phase.predicting().is_none() && !phase.interpolation_prediction() {
                 panic!("missing {player_id:?}");
             }
         }
         self.world
-            .tick(tick.inner, &mut self.context, disposition, on_info);
+            .tick(tick.inner, &mut self.context, phase, on_info);
     }
 
-    pub fn lerp(&self, next: &Self, t: f32, disposition: &LockstepDisposition) -> Self {
+    pub fn lerp(&self, next: &Self, t: f32, phase: &LockstepPhase) -> Self {
         let t = t.clamp(0.0, 1.0);
         Self {
-            context: self.context.lerp(&next.context, t, disposition),
-            world: self.world.lerp(&next.world, t, disposition),
+            context: self.context.lerp(&next.context, t, phase),
+            world: self.world.lerp(&next.world, t, phase),
         }
     }
 }

@@ -20,6 +20,7 @@ impl Ray {
     pub fn normalize(&self) -> Self {
         Self {
             origin: self.origin,
+            // TODO: normalize_or_zero?
             direction: self.direction.normalize(),
         }
     }

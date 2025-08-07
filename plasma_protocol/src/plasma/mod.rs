@@ -8,9 +8,9 @@ mod topology;
 mod update;
 
 pub use dto::{
-    ChatRecipient, ClaimUpdateDto, DomainDto, LogLevel, RealmAcl, ServerFailureDiagnostic,
-    ServerLogDto, ServerRole, Snippet, SnippetCriteria, TranslationsDto, TranslationsFile,
-    WebsocketConnectQuery,
+    ChatRecipient, ClaimUpdateDto, DomainDto, FileLoadedResult, FileNamespace, LogLevel, RealmAcl,
+    ServerFailureDiagnostic, ServerLogDto, ServerRole, Snippet, SnippetCriteria, TranslationsDto,
+    TranslationsFile, WebsocketConnectQuery,
 };
 pub use heartbeat::{ActiveHeartbeat, ArenaHeartbeat, RealmHeartbeat};
 pub use request::{PlasmaDeveloper, PlasmaDeveloperV1, PlasmaRequest, PlasmaRequestV1};
