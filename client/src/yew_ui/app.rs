@@ -928,10 +928,13 @@ impl<G: GameClient> Component for App<G> {
                         if let Some(context) = self.client_broker.as_context_mut() {
                             let created_invitation_id = context.state.core.created_invitation_id;
                             if let Some(created_invitation_id) = created_invitation_id
-                                && context.state.core.accepted_invitation_id.is_none() {
+                                && context.state.core.accepted_invitation_id.is_none()
+                            {
                                 // We could maintain this state on the client, but informing the server
                                 // is better for metrics/quests.
-                                context.send_request(CommonRequest::Invitation(InvitationRequest::Accept(Some(created_invitation_id))));
+                                context.send_request(CommonRequest::Invitation(
+                                    InvitationRequest::Accept(Some(created_invitation_id)),
+                                ));
                             }
                         }
                     }

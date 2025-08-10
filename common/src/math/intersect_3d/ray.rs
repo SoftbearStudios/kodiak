@@ -24,4 +24,8 @@ impl Ray {
             direction: self.direction.normalize(),
         }
     }
+
+    pub fn position(&self, t: f32) -> Vec3 {
+        self.origin + self.direction * t
+    }
 }

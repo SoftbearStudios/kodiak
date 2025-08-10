@@ -3,7 +3,7 @@ authors = ["Softbear, Inc."]
 edition = "2021"
 license = "LGPL-3.0-or-later"
 name = "kodiak_macros"
-version = "0.2.0"
+version = "0.2.1"
 workspace = ".."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
