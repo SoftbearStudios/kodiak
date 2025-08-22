@@ -1,4 +1,4 @@
 [workspace]
 members = ["*"]
-exclude = ["archive", "assets", "makefiles", "target", ".cargo", ".git"]
+exclude = ["archive", "assets", "makefiles", "target", ".cargo", ".git", ".github"]
 resolver = "2"
